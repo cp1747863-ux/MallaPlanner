@@ -632,24 +632,31 @@ function limpiarHorario() {
   horarioUsuario = [];
   renderizarHorario();
   guardarHorario();
-}// ==========================================
+}
+
+// ==========================================
 // FASE 1: RESPALDO Y RESTAURACIÓN (JSON)
 // ==========================================
 
 /**
- * Exporta todo el estado de LocalStorage a un archivo JSON descargable
+ * Exporta todo el estado de LocalStorage del usuario activo a un archivo JSON descargable
  */
 function exportarRespaldoJSON() {
+  const user = localStorage.getItem('usm_user');
+  if (!user) {
+    alert("Inicia sesión antes de exportar un respaldo.");
+    return;
+  }
+
   const datosRespaldo = {
     fechaExportacion: new Date().toISOString(),
-    usuario: localStorage.getItem('usuario_email') || '',
-    mallaEstado: localStorage.getItem('malla_estado') || '{}',
-    ppaDatos: localStorage.getItem('ppa_datos') || '[]',
-    certamenesDatos: localStorage.getItem('certamenes_datos') || '[]',
-    prioridadDatos: localStorage.getItem('prioridad_datos') || '{}',
-    agendaDatos: localStorage.getItem('agenda_datos') || '[]',
-    asistenciaDatos: localStorage.getItem('asistencia_datos') || '[]',
-    horarioDatos: localStorage.getItem('horario_datos') || '[]'
+    usuario: user,
+    mallaEstado: localStorage.getItem(`usm_progreso_${user}`) || '{}',
+    ppaDatos: localStorage.getItem(`usm_ppa_${user}`) || '[]',
+    certamenesDatos: localStorage.getItem(`usm_cert_${user}`) || '[]',
+    agendaDatos: localStorage.getItem(`usm_agenda_${user}`) || '[]',
+    asistenciaDatos: localStorage.getItem(`usm_asist_${user}`) || '[]',
+    horarioDatos: localStorage.getItem(`usm_horario_${user}`) || '[]'
   };
 
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(datosRespaldo, null, 2));
@@ -657,14 +664,14 @@ function exportarRespaldoJSON() {
   
   const fechaStr = new Date().toISOString().slice(0, 10);
   downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", `MallaPlanner_Respaldo_${fechaStr}.json`);
+  downloadAnchor.setAttribute("download", `USM_Planner_Respaldo_${user}_${fechaStr}.json`);
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
 }
 
 /**
- * Lee e importa un archivo JSON local para restaurar la sesión
+ * Lee e importa un archivo JSON local para restaurar la sesión activa
  */
 function importarRespaldoJSON(event) {
   const file = event.target.files[0];
@@ -676,22 +683,27 @@ function importarRespaldoJSON(event) {
       const datos = JSON.parse(e.target.result);
 
       if (!datos.mallaEstado && !datos.ppaDatos) {
-        alert("El archivo subido no corresponde a un formato válido de MallaPlanner.");
+        alert("El archivo subido no corresponde a un formato válido de USM Planner.");
         return;
       }
 
       if (confirm("Al importar este respaldo se reemplazarán tus datos actuales. ¿Deseas continuar?")) {
-        if (datos.usuario) localStorage.setItem('usuario_email', datos.usuario);
-        if (datos.mallaEstado) localStorage.setItem('malla_estado', datos.mallaEstado);
-        if (datos.ppaDatos) localStorage.setItem('ppa_datos', datos.ppaDatos);
-        if (datos.certamenesDatos) localStorage.setItem('certamenes_datos', datos.certamenesDatos);
-        if (datos.prioridadDatos) localStorage.setItem('prioridad_datos', datos.prioridadDatos);
-        if (datos.agendaDatos) localStorage.setItem('agenda_datos', datos.agendaDatos);
-        if (datos.asistenciaDatos) localStorage.setItem('asistencia_datos', datos.asistenciaDatos);
-        if (datos.horarioDatos) localStorage.setItem('horario_datos', datos.horarioDatos);
+        const user = datos.usuario || localStorage.getItem('usm_user');
 
-        alert("¡Respaldo cargado con éxito! La página se recargará para aplicar los cambios.");
-        window.location.reload();
+        if (user) {
+          localStorage.setItem('usm_user', user);
+          if (datos.mallaEstado) localStorage.setItem(`usm_progreso_${user}`, datos.mallaEstado);
+          if (datos.ppaDatos) localStorage.setItem(`usm_ppa_${user}`, datos.ppaDatos);
+          if (datos.certamenesDatos) localStorage.setItem(`usm_cert_${user}`, datos.certamenesDatos);
+          if (datos.agendaDatos) localStorage.setItem(`usm_agenda_${user}`, datos.agendaDatos);
+          if (datos.asistenciaDatos) localStorage.setItem(`usm_asist_${user}`, datos.asistenciaDatos);
+          if (datos.horarioDatos) localStorage.setItem(`usm_horario_${user}`, datos.horarioDatos);
+
+          alert("¡Respaldo cargado con éxito! La página se recargará para aplicar los cambios.");
+          window.location.reload();
+        } else {
+          alert("No se pudo identificar el usuario para guardar el respaldo.");
+        }
       }
     } catch (err) {
       alert("Error al leer el archivo JSON. Verifica que esté en buen estado.");
@@ -701,4 +713,5 @@ function importarRespaldoJSON(event) {
 
   reader.readAsText(file);
 }
+
 document.addEventListener('DOMContentLoaded', cargarPortal);
