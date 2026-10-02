@@ -63,17 +63,30 @@
     </div>
   </div>
 
-  <!-- PORTAL PRINCIPAL (OCULTO HASTA INICIAR SESIÓN) -->
+  <!-- PORTAL PRINCIPAL -->
   <div id="portal-content" class="hidden flex-col flex-grow">
     
     <!-- ENCABEZADO SUPERIOR -->
     <header class="bg-slate-900/90 border-b border-slate-800 px-6 py-3 sticky top-0 z-40 backdrop-blur-sm flex justify-between items-center">
       <div class="flex items-center space-x-3">
         <span class="bg-sky-500 text-slate-950 font-black px-2.5 py-0.5 rounded text-sm tracking-wider">MallaPlanner</span>
-        <span class="font-bold text-slate-100 text-base">Planificador Académico</span>
+        <span class="font-bold text-slate-100 text-base hidden sm:inline">Planificador Académico</span>
       </div>
-      <div class="flex items-center space-x-4">
-        <span id="user-display" class="text-xs text-sky-400 font-medium hidden sm:inline"></span>
+
+      <!-- BOTONES DE ACCIÓN Y RESPALDO -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="exportarRespaldoJSON()" title="Exportar copia de seguridad"
+          class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-sky-400 font-medium transition flex items-center gap-1">
+          <span>📥</span> <span class="hidden sm:inline">Exportar</span>
+        </button>
+        
+        <button onclick="document.getElementById('file-import-json').click()" title="Importar copia de seguridad"
+          class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-emerald-400 font-medium transition flex items-center gap-1">
+          <span>📤</span> <span class="hidden sm:inline">Importar</span>
+        </button>
+        <input type="file" id="file-import-json" accept=".json" onchange="importarRespaldoJSON(event)" class="hidden">
+
+        <span id="user-display" class="text-xs text-sky-400 font-medium hidden md:inline"></span>
         <button onclick="cerrarSesion()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded text-slate-300 transition">
           Cerrar Sesión
         </button>
