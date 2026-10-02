@@ -94,6 +94,9 @@
         <button id="tab-horario" onclick="cambiarPestana('horario')" class="py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
           ⏰ Horario Semanal
         </button>
+        <button onclick="abrirModalFeedback()" class="py-3 font-semibold border-b-2 border-transparent text-amber-400 hover:text-amber-300 transition whitespace-nowrap">
+          💬 Reportar / Feedback
+        </button>
       </nav>
     </header>
 
@@ -356,7 +359,7 @@
           <h2 class="text-lg font-bold text-white">Horario Semanal de Clases</h2>
           <div class="flex space-x-2">
             <button onclick="exportarHorarioPDF()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 font-bold transition">
-              🖨️️ Imprimir / Exportar PDF
+              🖨 Imprimir / Exportar PDF
             </button>
             <button onclick="limpiarHorario()" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-2 transition">
               Limpiar Horario
@@ -396,10 +399,11 @@
               <option value="3-4">3-4 (09:35 - 10:45)</option>
               <option value="5-6">5-6 (10:55 - 12:05)</option>
               <option value="7-8">7-8 (12:15 - 13:25)</option>
-              <option value="9-10">9-10 (14:30 - 15:40)</option>
-              <option value="11-12">11-12 (15:50 - 17:00)</option>
-              <option value="13-14">13-14 (17:10 - 18:20)</option>
-              <option value="15-16">15-16 (18:30 - 19:40)</option>
+              <option value="9-10">9-10 (13:35 - 14:45)</option>
+              <option value="11-12">11-12 (14:55 - 16:05)</option>
+              <option value="13-14">13-14 (16:15 - 17:25)</option>
+              <option value="15-16">15-16 (17:35 - 18:45)</option>
+              <option value="17-18">17-18 (18:55 - 20:05)</option>
             </select>
           </div>
 
@@ -442,6 +446,27 @@
       </section>
 
     </main>
+  </div>
+
+  <!-- MODAL DE FEEDBACK Y REPORTES -->
+  <div id="modal-feedback" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-2xl max-w-md w-full space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-base font-bold text-white">💬 Feedback y Reporte de Problemas</h3>
+        <button onclick="cerrarModalFeedback()" class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed">
+        ¿Encontraste un error en los créditos de una asignatura, un fallo en los cálculos o quieres solicitar la incorporación de tu carrera?
+      </p>
+      <div class="space-y-2 pt-2">
+        <a href="https://github.com/tu-usuario/tu-repositorio/issues" target="_blank" class="block w-full text-center bg-slate-800 hover:bg-slate-700 text-sky-400 font-semibold py-2.5 rounded-lg border border-slate-700 text-xs transition">
+          🐛 Reportar Error o Sugerencia (GitHub Issues)
+        </a>
+        <a href="https://forms.gle/tu-formulario-aqui" target="_blank" class="block w-full text-center bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2.5 rounded-lg text-xs transition">
+          📝 Llenar Formulario Directo de Feedback
+        </a>
+      </div>
+    </div>
   </div>
 
   <script src="js/mallas.js"></script>
