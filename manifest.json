@@ -1,0 +1,22 @@
+{
+  "short_name": "MallaPlanner",
+  "name": "MallaPlanner - Planificador Académico",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3426/3426653.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3426/3426653.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "description": "Herramienta independiente de gestión de mallas, cálculo de PPA, certámenes y horarios."
+}
