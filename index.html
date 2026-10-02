@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Estudiantil USM</title>
+  
+  <!-- Carga de Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            usm: {
+              bg: '#0b1220',
+              panel: '#1e293b',
+              border: '#334155',
+              accent: '#38bdf8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at top, #0b1220, #05070d);
+      color: rgba(255, 255, 255, 0.9);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+  <!-- PANTALLA DE LOGIN (MODAL SUPERPUESTO) -->
+  <div id="login-screen" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 max-w-md w-full shadow-2xl space-y-6">
+      <div class="text-center space-y-2">
+        <div class="inline-block bg-sky-500 text-slate-950 font-black px-3 py-1 rounded text-lg tracking-wider">USM</div>
+        <h1 class="text-2xl font-bold text-white">Portal Estudiantil</h1>
+        <p class="text-xs text-slate-400">Ingresa con tu correo institucional para acceder.</p>
+      </div>
+
+      <form id="login-form" onsubmit="iniciarSesion(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1" for="user-email">Correo Institucional:</label>
+          <input type="email" id="user-email" placeholder="ejemplo@usm.cl" required
+            class="w-full bg-slate-700/80 border border-slate-600 rounded p-2.5 text-sm text-white focus:outline-none focus:border-sky-400">
+          <p id="login-error" class="text-red-400 text-xs mt-1.5 hidden">El correo debe terminar en @usm.cl o @alumnos.usm.cl</p>
+        </div>
+
+        <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 font-semibold py-2.5 rounded text-slate-950 transition text-sm shadow-lg shadow-sky-500/20">
+          Ingresar al Portal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PORTAL PRINCIPAL (OCULTO HASTA INICIAR SESIÓN) -->
+  <div id="portal-content" class="hidden flex-col flex-grow">
+    
+    <!-- ENCABEZADO SUPERIOR -->
+    <header class="bg-slate-900/90 border-b border-slate-800 px-6 py-3 sticky top-0 z-40 backdrop-blur-sm flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <span class="bg-sky-500 text-slate-950 font-black px-2.5 py-0.5 rounded text-sm tracking-wider">USM</span>
+        <span class="font-bold text-slate-100 text-base">Portal Estudiantil</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span id="user-display" class="text-xs text-sky-400 font-medium hidden sm:inline"></span>
+        <button onclick="cerrarSesion()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded text-slate-300 transition">
+          Cerrar Sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- BARRA DE NAVEGACIÓN DE PESTAÑAS -->
+    <div class="bg-slate-900/40 border-b border-slate-800 px-6">
+      <div class="max-w-5xl mx-auto flex space-x-6 text-sm overflow-x-auto">
+        <button onclick="cambiarPestana('malla')" id="tab-malla" class="py-3 font-semibold border-b-2 border-sky-400 text-sky-400 transition whitespace-nowrap">
+          Malla Curricular
+        </button>
+        <button onclick="cambiarPestana('ppa')" id="tab-ppa" class="py-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+          Calculadora PPA
+        </button>
+        <button onclick="cambiarPestana('certamenes')" id="tab-certamenes" class="py-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+          ¿Cuánto Necesito Aprobación?
+        </button>
+        <button onclick="cambiarPestana('prioridad')" id="tab-prioridad" class="py-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+          Prioridad de Inscripción
+        </button>
+        <button onclick="cambiarPestana('agenda')" id="tab-agenda" class="py-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+          Agenda & Asistencia
+        </button>
+        <button onclick="cambiarPestana('horario')" id="tab-horario" class="py-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">
+          Horario Semanal
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="max-w-5xl mx-auto w-full p-4 md:p-6 flex-grow">
+      
+      <!-- PESTAÑA 1: MALLA CURRICULAR -->
+      <section id="sec-malla" class="space-y-6">
+        <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl space-y-4">
+          <h2 class="text-xl font-bold text-sky-400">Consulta de Mallas Curriculares</h2>
+          <p class="text-xs text-slate-400">Selecciona tu sede y carrera para interactuar con tu progreso académico.</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1" for="select-sede">Selecciona tu Sede:</label>
+              <select id="select-sede" onchange="cargarCarreras()" class="w-full bg-slate-700/80 border border-slate-600 rounded p-2.5 text-sm text-white focus:outline-none focus:border-sky-400">
+                <option value="">-- Seleccionar Sede --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1" for="select-carrera">Selecciona tu Carrera:</label>
+              <select id="select-carrera" onchange="mostrarMalla()" class="w-full bg-slate-700/80 border border-slate-600 rounded p-2.5 text-sm text-white focus:outline-none focus:border-sky-400" disabled>
+                <option value="">-- Seleccionar Carrera --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-avance" class="hidden bg-slate-800/60 border border-slate-700 p-5 rounded-xl space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-slate-200">Progreso Académico</h3>
+              <p class="text-xs text-slate-400">Haz clic en cada ramo para cambiar estado: <span class="text-slate-400 font-semibold">Pendiente</span> ➔ <span class="text-sky-400 font-semibold">Cursando</span> ➔ <span class="text-emerald-400 font-semibold">Aprobado</span></p>
+            </div>
+            <div class="text-right">
+              <span id="stat-porcentaje" class="text-2xl font-black text-emerald-400">0%</span>
+              <p class="text-[11px] text-slate-400">Avance Total</p>
+            </div>
+          </div>
+
+          <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-700">
+            <div id="barra-progreso" class="bg-emerald-500 h-full transition-all duration-500 rounded-full" style="width: 0%"></div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 pt-2 text-center text-xs border-t border-slate-700/60">
+            <div>
+              <span id="stat-creditos" class="font-bold text-slate-200">0 / 0</span>
+              <p class="text-[10px] text-slate-500">Créditos SCT</p>
+            </div>
+            <div>
+              <span id="stat-aprobados" class="font-bold text-emerald-400">0</span>
+              <p class="text-[10px] text-slate-500">Ramos Aprobados</p>
+            </div>
+            <div>
+              <span id="stat-cursando" class="font-bold text-sky-400">0</span>
+              <p class="text-[10px] text-slate-500">En Cursado</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="malla-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- PESTAÑA 2: PPA -->
+      <section id="sec-ppa" class="hidden space-y-6">
+        <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl space-y-6">
+          <header class="border-b border-slate-700/80 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div>
+              <h1 class="text-2xl font-bold text-sky-400">Calculadora de Promedio (PPA)</h1>
+              <p class="text-xs text-slate-400 mt-1">Calcula tu Promedio Ponderado Acumulado según notas y créditos SCT (Escala USM 0 - 100).</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="cargarRamosDesdeMalla()" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium px-3 py-1.5 rounded text-xs transition">
+                Importar de Malla
+              </button>
+              <button onclick="agregarRamoPPA()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-1.5 rounded text-xs transition">
+                + Agregar Ramo
+              </button>
+            </div>
+          </header>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 text-center">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">PPA Estimado</span>
+              <p id="res-ppa-valor" class="text-3xl font-black text-sky-400 mt-1">0.00</p>
+              <span id="res-ppa-estado" class="text-[11px] font-semibold text-slate-500 block mt-1">Sin datos</span>
+            </div>
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 text-center">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Créditos Evaluados</span>
+              <p id="res-ppa-creditos" class="text-2xl font-bold text-slate-200 mt-2">0 SCT</p>
+            </div>
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 text-center">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Asignaturas</span>
+              <p id="res-ppa-ramos" class="text-2xl font-bold text-slate-200 mt-2">0</p>
+            </div>
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 text-center">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Nota Mínima Aprobatoria</span>
+              <p class="text-2xl font-bold text-emerald-400 mt-2">55 pts</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/40">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800 text-slate-300 font-semibold border-b border-slate-700 uppercase tracking-wider">
+                <tr>
+                  <th class="p-3">Asignatura / Código</th>
+                  <th class="p-3 w-28">Créditos SCT</th>
+                  <th class="p-3 w-32">Nota (0 - 100)</th>
+                  <th class="p-3 w-28 text-center">Estado</th>
+                  <th class="p-3 w-16 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="ppa-container-tabla" class="divide-y divide-slate-800 text-slate-200"></tbody>
+            </table>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button type="button" onclick="calcularPPA()" class="flex-1 bg-sky-500 hover:bg-sky-600 font-semibold py-2.5 px-4 rounded transition text-slate-950 text-sm shadow-md">
+              Calcular Promedio PPA
+            </button>
+            <button type="button" onclick="guardarPPA()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 px-4 rounded transition text-sm">
+              Guardar Notas
+            </button>
+            <button type="button" onclick="limpiarPPA()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-2.5 px-4 rounded transition text-sm">
+              Limpiar Tabla
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 3: CERTÁMENES -->
+      <section id="sec-certamenes" class="hidden space-y-6">
+        <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl space-y-6">
+          <header class="border-b border-slate-700/80 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h1 class="text-2xl font-bold text-sky-400">Calculadora de Certámenes</h1>
+              <p class="text-xs text-slate-400 mt-1">Averigua qué nota exacta necesitas en tus evaluaciones pendientes para aprobar la asignatura con 55.</p>
+            </div>
+            <button onclick="agregarEvaluacionCertamen()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-1.5 rounded text-xs transition">
+              + Agregar Evaluación
+            </button>
+          </header>
+
+          <div id="certamen-resultado-card" class="bg-slate-900/80 border border-sky-500/40 p-5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="space-y-1 text-center md:text-left">
+              <span class="text-[10px] text-sky-400 font-bold uppercase tracking-wider">Resultado de Simulación</span>
+              <h2 id="certamen-mensaje-titulo" class="text-lg font-bold text-slate-100">Ingresa tus evaluaciones</h2>
+              <p id="certamen-mensaje-detalle" class="text-xs text-slate-400">El sistema calculará automáticamente la nota requerida en los certámenes pendientes.</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 px-6 py-3 rounded-xl text-center min-w-[140px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Nota Requerida</span>
+              <p id="certamen-nota-necesaria" class="text-3xl font-black text-sky-400">--</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/40 p-4 rounded-lg border border-slate-700">
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1" for="certamen-nombre-ramo">Nombre del Ramo:</label>
+              <input type="text" id="certamen-nombre-ramo" list="lista-ramos-cursando-certamen" placeholder="Ej: Programación (INF-110)"
+                class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-sky-400">
+              <datalist id="lista-ramos-cursando-certamen"></datalist>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1" for="certamen-nota-objetivo">Nota Mínima para Aprobar (USM):</label>
+              <input type="number" id="certamen-nota-objetivo" value="55" min="1" max="100" onchange="calcularCertamenes()"
+                class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-sky-400 font-bold text-emerald-400">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/40">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800 text-slate-300 font-semibold border-b border-slate-700 uppercase tracking-wider">
+                <tr>
+                  <th class="p-3">Evaluación (Certamen / Taller / Quiz)</th>
+                  <th class="p-3 w-32">Ponderación (%)</th>
+                  <th class="p-3 w-36">Nota Obtenida</th>
+                  <th class="p-3 w-32 text-center">Estado</th>
+                  <th class="p-3 w-16 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="certamenes-container-tabla" class="divide-y divide-slate-800 text-slate-200"></tbody>
+            </table>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button type="button" onclick="calcularCertamenes()" class="flex-1 bg-sky-500 hover:bg-sky-600 font-semibold py-2.5 px-4 rounded transition text-slate-950 text-sm shadow-md">
+              Calcular Nota Requerida
+            </button>
+            <button type="button" onclick="limpiarCertamenes()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-2.5 px-4 rounded transition text-sm">
+              Reiniciar Evaluaciones
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 4: PRIORIDAD -->
+      <section id="sec-prioridad" class="hidden space-y-6">
+        <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl space-y-6">
+          <header class="border-b border-slate-700/80 pb-4">
+            <h1 class="text-2xl font-bold text-sky-400">Coeficiente de Prioridad Académica USM</h1>
+            <p class="text-xs text-slate-400 mt-1">El Coeficiente de Prioridad determina tu ventana y turno de inscripción de asignaturas cada semestre.</p>
+          </header>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-slate-900/80 border border-sky-500/40 p-5 rounded-xl text-center md:col-span-1 flex flex-col justify-center items-center">
+              <span class="text-[10px] text-sky-400 font-bold uppercase tracking-wider">Tu Prioridad Estimada</span>
+              <p id="res-prioridad-valor" class="text-4xl font-black text-sky-400 my-2">0.00</p>
+              <span id="res-prioridad-nivel" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                Turno Estándar
+              </span>
+            </div>
+
+            <form id="form-prioridad" oninput="calcularPrioridad()" class="bg-slate-900/40 p-4 rounded-xl border border-slate-700 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium" for="prio-ppa">PPA Actual (Promedio Ponderado):</label>
+                <input type="number" id="prio-ppa" step="0.1" min="0" max="100" value="65" required
+                  class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white font-bold focus:outline-none focus:border-sky-400">
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium" for="prio-cred-aprob">Créditos SCT Aprobados:</label>
+                <input type="number" id="prio-cred-aprob" min="0" value="40" required
+                  class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white font-bold focus:outline-none focus:border-sky-400">
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium" for="prio-cred-insc">Créditos SCT Inscritos Totales:</label>
+                <input type="number" id="prio-cred-insc" min="1" value="45" required
+                  class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white font-bold focus:outline-none focus:border-sky-400">
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium" for="prio-reprobados">Asignaturas Reprobadas (Repeticiones):</label>
+                <input type="number" id="prio-reprobados" min="0" value="0" required
+                  class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white font-bold focus:outline-none focus:border-sky-400">
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 5: AGENDA Y ASISTENCIA -->
+      <section id="sec-agenda" class="hidden space-y-6">
+        <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl space-y-6">
+          <header class="border-b border-slate-700/80 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h1 class="text-2xl font-bold text-sky-400">Agenda de Certámenes y Entregas</h1>
+              <p class="text-xs text-slate-400 mt-1">Lleva el control de certámenes y tareas con cuenta regresiva de días faltantes.</p>
+            </div>
+            <button onclick="agregarItemAgenda()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-1.5 rounded text-xs transition">
+              + Nueva Fecha
+            </button>
+          </header>
+
+          <div class="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/40">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800 text-slate-300 font-semibold border-b border-slate-700 uppercase tracking-wider">
+                <tr>
+                  <th class="p-3">Evento / Evaluación</th>
+                  <th class="p-3 w-36">Asignatura</th>
+                  <th class="p-3 w-36">Fecha Límite</th>
+                  <th class="p-3 w-32 text-center">Cuenta Regresiva</th>
+                  <th class="p-3 w-16 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="agenda-container-tabla" class="divide-y divide-slate-800 text-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl space-y-6">
+          <header class="border-b border-slate-700/80 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h1 class="text-xl font-bold text-sky-400">Control de Asistencia (Prevención NCR)</h1>
+              <p class="text-xs text-slate-400 mt-1">Asegúrate de no quedar reprobado por falta de asistencia (No Cumple Requisito - NCR).</p>
+            </div>
+            <button onclick="agregarAsistencia()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-1.5 rounded text-xs transition">
+              + Registrar Ramo
+            </button>
+          </header>
+
+          <div class="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/40">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-800 text-slate-300 font-semibold border-b border-slate-700 uppercase tracking-wider">
+                <tr>
+                  <th class="p-3">Asignatura / Cátedra / Lab</th>
+                  <th class="p-3 w-24 text-center">Asistidas</th>
+                  <th class="p-3 w-24 text-center">Total Clases</th>
+                  <th class="p-3 w-28 text-center">% Mínimo</th>
+                  <th class="p-3 w-32 text-center">Estado / Margen</th>
+                  <th class="p-3 w-16 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="asistencia-container-tabla" class="divide-y divide-slate-800 text-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 6: HORARIO SEMANAL -->
+      <section id="sec-horario" class="hidden space-y-6">
+        <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 shadow-xl space-y-6">
+          <header class="border-b border-slate-700/80 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div>
+              <h1 class="text-2xl font-bold text-sky-400">Horario Semanal USM</h1>
+              <p class="text-xs text-slate-400 mt-1">Organiza tus clases por bloques institucionales y detecta topes horarios.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="cargarOpcionesRamosHorario()" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium px-3 py-1.5 rounded text-xs transition">
+                Sincronizar Malla
+              </button>
+              <button onclick="limpiarHorario()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium px-3 py-1.5 rounded text-xs transition">
+                Limpiar Horario
+              </button>
+            </div>
+          </header>
+
+          <div id="alerta-conflictos" class="hidden bg-rose-500/10 border border-rose-500/40 p-3.5 rounded-lg text-xs text-rose-300 space-y-1">
+            <p class="font-bold flex items-center gap-1.5">
+              <span>⚠️</span> <span>Se han detectado topes horarios en tu plantilla:</span>
+            </p>
+            <ul id="lista-conflictos-texto" class="list-disc list-inside text-rose-400 text-[11px] space-y-0.5"></ul>
+          </div>
+
+          <form id="form-horario" onsubmit="agregarBloqueHorario(event)" class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-xs items-end">
+            <div class="lg:col-span-2">
+              <label class="block text-slate-400 mb-1 font-medium" for="horario-ramo">Asignatura:</label>
+              <input type="text" id="horario-ramo" list="lista-ramos-cursando" placeholder="Ej: Programación (INF-110)" required
+                class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-sky-400">
+              <datalist id="lista-ramos-cursando"></datalist>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1 font-medium" for="horario-dia">Día:</label>
+              <select id="horario-dia" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-sky-400">
+                <option value="lunes">Lunes</option>
+                <option value="martes">Martes</option>
+                <option value="miercoles">Miércoles</option>
+                <option value="jueves">Jueves</option>
+                <option value="viernes">Viernes</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1 font-medium" for="horario-bloque">Bloque USM:</label>
+              <select id="horario-bloque" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-sky-400">
+                <option value="1-2">Bloque 1-2 (08:15 - 09:25)</option>
+                <option value="3-4">Bloque 3-4 (09:35 - 10:45)</option>
+                <option value="5-6">Bloque 5-6 (10:55 - 12:05)</option>
+                <option value="7-8">Bloque 7-8 (12:15 - 13:25)</option>
+                <option value="9-10">Bloque 9-10 (14:30 - 15:40)</option>
+                <option value="11-12">Bloque 11-12 (15:50 - 17:00)</option>
+                <option value="13-14">Bloque 13-14 (17:10 - 18:20)</option>
+                <option value="15-16">Bloque 15-16 (18:30 - 19:40)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1 font-medium" for="horario-tipo">Tipo / Sala:</label>
+              <div class="flex gap-1">
+                <select id="horario-tipo" class="w-1/2 bg-slate-800 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-sky-400">
+                  <option value="Cátedra">Cátedra</option>
+                  <option value="Ayudantía">Ayudantía</option>
+                  <option value="Laboratorio">Laboratorio</option>
+                  <option value="Taller">Taller</option>
+                </select>
+                <input type="text" id="horario-sala" placeholder="Sala" class="w-1/2 bg-slate-800 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-sky-400">
+              </div>
+            </div>
+            <div>
+              <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 font-semibold py-2 px-3 rounded text-slate-950 transition text-xs shadow-md">
+                + Añadir Bloque
+              </button>
+            </div>
+          </form>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/60 shadow-inner">
+            <table class="w-full min-w-[650px] border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-800 text-slate-300 font-semibold border-b border-slate-700 text-center">
+                  <th class="p-3 w-28 border-r border-slate-700 bg-slate-800/90 sticky left-0 z-10">Bloque / Hora</th>
+                  <th class="p-3 w-1/5">Lunes</th>
+                  <th class="p-3 w-1/5">Martes</th>
+                  <th class="p-3 w-1/5">Miércoles</th>
+                  <th class="p-3 w-1/5">Jueves</th>
+                  <th class="p-3 w-1/5">Viernes</th>
+                </tr>
+              </thead>
+              <tbody id="grid-horario-body" class="divide-y divide-slate-800/80"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800/80 text-slate-500 text-xs py-6 mt-auto">
+      <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
+        <p>© 2026 Portal USM — Universidad Técnica Federico Santa María</p>
+        <p class="text-slate-600">Sistema Integral de Gestión Estudiantil</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/mallas.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
