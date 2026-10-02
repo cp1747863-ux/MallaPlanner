@@ -35,6 +35,85 @@
       color: rgba(255, 255, 255, 0.9);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
+
+    /* --- MODO CLARO --- */
+    body.light-mode {
+      background: #f8fafc !important;
+      color: #0f172a !important;
+    }
+
+    body.light-mode header,
+    body.light-mode .bg-slate-900\/90,
+    body.light-mode .bg-slate-900\/80,
+    body.light-mode .bg-slate-900\/60,
+    body.light-mode .bg-slate-900\/40,
+    body.light-mode .bg-slate-950 {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+    }
+
+    body.light-mode .bg-slate-800,
+    body.light-mode .bg-slate-800\/80,
+    body.light-mode .bg-slate-800\/60 {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    body.light-mode .border-slate-700,
+    body.light-mode .border-slate-800,
+    body.light-mode .border-slate-800\/80 {
+      border-color: #cbd5e1 !important;
+    }
+
+    body.light-mode .text-slate-100,
+    body.light-mode .text-slate-200,
+    body.light-mode .text-slate-300,
+    body.light-mode .text-slate-400 {
+      color: #334155 !important;
+    }
+
+    body.light-mode input, 
+    body.light-mode select {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    /* --- ESTILOS DE IMPRESIÓN (PDF LIMPIO) --- */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+
+      header, 
+      nav, 
+      button, 
+      .no-print, 
+      #login-screen, 
+      #panel-avance, 
+      footer {
+        display: none !important;
+      }
+
+      #sec-horario, #sec-malla {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+
+      th, td {
+        border: 1px solid #64748b !important;
+        color: #000000 !important;
+        padding: 6px !important;
+      }
+    }
   </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -73,28 +152,34 @@
         <span class="font-bold text-slate-100 text-base hidden sm:inline">Planificador Académico</span>
       </div>
 
-      <!-- BOTONES DE ACCIÓN Y RESPALDO -->
+      <!-- BOTONES DE ACCIÓN, MODO OSCURO Y RESPALDO -->
       <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Botón de Modo Claro / Oscuro -->
+        <button onclick="alternarTema()" id="btn-theme" title="Cambiar tema"
+          class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-slate-200 font-medium transition flex items-center gap-1.5 no-print">
+          <span id="theme-icon">🌙</span> <span id="theme-text" class="hidden sm:inline">Modo Claro</span>
+        </button>
+
         <button onclick="exportarRespaldoJSON()" title="Exportar copia de seguridad"
-          class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-sky-400 font-medium transition flex items-center gap-1">
+          class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-sky-400 font-medium transition flex items-center gap-1 no-print">
           <span>📥</span> <span class="hidden sm:inline">Exportar</span>
         </button>
         
         <button onclick="document.getElementById('file-import-json').click()" title="Importar copia de seguridad"
-          class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-emerald-400 font-medium transition flex items-center gap-1">
+          class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-emerald-400 font-medium transition flex items-center gap-1 no-print">
           <span>📤</span> <span class="hidden sm:inline">Importar</span>
         </button>
         <input type="file" id="file-import-json" accept=".json" onchange="importarRespaldoJSON(event)" class="hidden">
 
         <span id="user-display" class="text-xs text-sky-400 font-medium hidden md:inline"></span>
-        <button onclick="cerrarSesion()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded text-slate-300 transition">
+        <button onclick="cerrarSesion()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded text-slate-300 transition no-print">
           Cerrar Sesión
         </button>
       </div>
     </header>
 
     <!-- BARRA DE NAVEGACIÓN DE PESTAÑAS -->
-    <div class="bg-slate-900/40 border-b border-slate-800 px-6">
+    <div class="bg-slate-900/40 border-b border-slate-800 px-6 no-print">
       <div class="max-w-5xl mx-auto flex space-x-6 text-sm overflow-x-auto">
         <button onclick="cambiarPestana('malla')" id="tab-malla" class="py-3 font-semibold border-b-2 border-sky-400 text-sky-400 transition whitespace-nowrap">
           Malla Curricular
@@ -172,6 +257,17 @@
               <p class="text-[10px] text-slate-500">En Cursado</p>
             </div>
           </div>
+        </div>
+
+        <!-- BUSCADOR / FILTRO DE ASIGNATURAS -->
+        <div class="mb-4 no-print">
+          <input 
+            type="text" 
+            id="input-filtro-malla" 
+            onkeyup="filtrarMalla(this.value)" 
+            placeholder="🔍 Buscar asignatura por nombre, código o estado (ej: pendiente)..." 
+            class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-400 transition"
+          >
         </div>
 
         <div id="malla-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -360,9 +456,14 @@
               <h1 class="text-2xl font-bold text-sky-400">Agenda de Certámenes y Entregas</h1>
               <p class="text-xs text-slate-400 mt-1">Lleva el control de certámenes y tareas con cuenta regresiva de días faltantes.</p>
             </div>
-            <button onclick="agregarItemAgenda()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-1.5 rounded text-xs transition">
-              + Nueva Fecha
-            </button>
+            <div class="flex gap-2">
+              <button onclick="exportarCalendarICS()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-1.5 rounded text-xs transition flex items-center gap-1">
+                📅 Exportar .ICS
+              </button>
+              <button onclick="agregarItemAgenda()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-1.5 rounded text-xs transition">
+                + Nueva Fecha
+              </button>
+            </div>
           </header>
 
           <div class="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900/40">
@@ -419,10 +520,13 @@
               <p class="text-xs text-slate-400 mt-1">Organiza tus clases por bloques de horario y detecta topes horarios.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button onclick="cargarOpcionesRamosHorario()" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium px-3 py-1.5 rounded text-xs transition">
+              <button onclick="exportarHorarioPDF()" class="bg-purple-600 hover:bg-purple-500 text-white font-medium px-3 py-1.5 rounded text-xs transition flex items-center gap-1 no-print">
+                🖨️ Guardar PDF
+              </button>
+              <button onclick="cargarOpcionesRamosHorario()" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium px-3 py-1.5 rounded text-xs transition no-print">
                 Sincronizar Malla
               </button>
-              <button onclick="limpiarHorario()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium px-3 py-1.5 rounded text-xs transition">
+              <button onclick="limpiarHorario()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium px-3 py-1.5 rounded text-xs transition no-print">
                 Limpiar Horario
               </button>
             </div>
@@ -435,7 +539,7 @@
             <ul id="lista-conflictos-texto" class="list-disc list-inside text-rose-400 text-[11px] space-y-0.5"></ul>
           </div>
 
-          <form id="form-horario" onsubmit="agregarBloqueHorario(event)" class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-xs items-end">
+          <form id="form-horario" onsubmit="agregarBloqueHorario(event)" class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-xs items-end no-print">
             <div class="lg:col-span-2">
               <label class="block text-slate-400 mb-1 font-medium" for="horario-ramo">Asignatura:</label>
               <input type="text" id="horario-ramo" list="lista-ramos-cursando" placeholder="Ej: Programación (INF-110)" required
@@ -505,7 +609,7 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-950 border-t border-slate-800/80 text-slate-500 text-xs py-6 mt-auto">
+    <footer class="bg-slate-950 border-t border-slate-800/80 text-slate-500 text-xs py-6 mt-auto no-print">
       <div class="max-w-5xl mx-auto px-4 flex flex-col items-center gap-2 text-center">
         <p class="font-semibold text-slate-400">Proyecto Estudiantil Independiente</p>
         <p class="max-w-2xl text-[11px] text-slate-500">
