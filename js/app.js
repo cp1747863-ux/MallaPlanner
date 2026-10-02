@@ -83,7 +83,7 @@ function aplicarTemaGuardado() {
     document.body.classList.add('light-mode');
     const icon = document.getElementById('theme-icon');
     const text = document.getElementById('theme-text');
-    if (icon) icon.textContent = '☀️';
+    if (icon) icon.textContent = '☀️️';
     if (text) text.textContent = 'Modo Oscuro';
   }
 }
@@ -243,7 +243,6 @@ function mostrarMalla() {
 
     actualizarEstadisticasMalla(carreraId);
     
-    // Si hay una búsqueda previa activa, se re-aplica el filtro
     const inputFiltro = document.getElementById('input-filtro-malla');
     if (inputFiltro && inputFiltro.value.trim() !== '') {
       filtrarMalla(inputFiltro.value);
@@ -362,7 +361,7 @@ function actualizarEstadisticasMalla(carreraId) {
   if (elCursando) elCursando.textContent = ramosCursando;
 }
 
-// --- PPA ---
+// --- PPA (CON VALIDACIONES AVANZADAS) ---
 function renderizarTablaPPA() {
   const tbody = document.getElementById('ppa-container-tabla');
   if (!tbody) return;
@@ -378,13 +377,32 @@ function renderizarTablaPPA() {
     tr.className = 'hover:bg-slate-800/50 transition';
     tr.innerHTML = `
       <td class="p-2.5"><input type="text" value="${item.nombre}" onchange="actualizarDatoPPA(${idx}, 'nombre', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200"></td>
-      <td class="p-2.5"><input type="number" min="1" max="20" value="${item.creditos}" onchange="actualizarDatoPPA(${idx}, 'creditos', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-center"></td>
+      <td class="p-2.5"><input type="number" min="1" max="30" value="${item.creditos}" onchange="actualizarDatoPPA(${idx}, 'creditos', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-center"></td>
       <td class="p-2.5"><input type="number" min="0" max="100" value="${item.nota || ''}" onchange="actualizarDatoPPA(${idx}, 'nota', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-center font-semibold"></td>
       <td class="p-2.5 text-center">${item.nota >= 55 ? '<span class="text-emerald-400 font-bold">Aprobado</span>' : '<span class="text-rose-400">Reprobado</span>'}</td>
       <td class="p-2.5 text-center"><button onclick="eliminarRamoPPA(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+function actualizarDatoPPA(idx, campo, valor) {
+  if (campo === 'creditos') {
+    let cred = parseFloat(valor);
+    if (isNaN(cred) || cred < 1) cred = 1;
+    if (cred > 30) cred = 30;
+    listaRamosPPA[idx].creditos = cred;
+  } else if (campo === 'nota') {
+    let nota = parseFloat(valor);
+    if (isNaN(nota) || nota < 0) nota = 0;
+    if (nota > 100) nota = 100;
+    listaRamosPPA[idx].nota = nota;
+  } else {
+    listaRamosPPA[idx][campo] = valor;
+  }
+  renderizarTablaPPA();
+  calcularPPA();
+  guardarPPA();
 }
 
 function agregarRamoPPA() {
@@ -396,15 +414,6 @@ function agregarRamoPPA() {
 
 function eliminarRamoPPA(idx) {
   listaRamosPPA.splice(idx, 1);
-  renderizarTablaPPA();
-  calcularPPA();
-  guardarPPA();
-}
-
-function actualizarDatoPPA(idx, campo, valor) {
-  if (campo === 'creditos') listaRamosPPA[idx].creditos = Math.max(1, parseFloat(valor) || 0);
-  else if (campo === 'nota') listaRamosPPA[idx].nota = Math.min(100, Math.max(0, parseFloat(valor) || 0));
-  else listaRamosPPA[idx][campo] = valor;
   renderizarTablaPPA();
   calcularPPA();
   guardarPPA();
@@ -460,7 +469,7 @@ function limpiarPPA() {
   guardarPPA();
 }
 
-// --- CERTÁMENES ---
+// --- CERTÁMENES (CON VALIDACIONES AVANZADAS) ---
 function renderizarTablaCertamenes() {
   const tbody = document.getElementById('certamenes-container-tabla');
   if (!tbody) return;
@@ -479,6 +488,33 @@ function renderizarTablaCertamenes() {
   });
 }
 
+function actualizarDatoCertamen(idx, campo, valor) {
+  if (campo === 'ponderacion') {
+    let pond = parseFloat(valor);
+    if (isNaN(pond) || pond < 1) pond = 1;
+    if (pond > 100) pond = 100;
+    listaCertamenes[idx].ponderacion = pond;
+  } else if (campo === 'nota') {
+    const val = parseFloat(valor);
+    if (!isNaN(val)) {
+      let nota = val;
+      if (nota < 0) nota = 0;
+      if (nota > 100) nota = 100;
+      listaCertamenes[idx].nota = nota;
+      listaCertamenes[idx].completada = true;
+    } else {
+      listaCertamenes[idx].nota = 0;
+      listaCertamenes[idx].completada = false;
+    }
+  } else {
+    listaCertamenes[idx][campo] = valor;
+  }
+  
+  renderizarTablaCertamenes();
+  calcularCertamenes();
+  guardarCertamenes();
+}
+
 function agregarEvaluacionCertamen() {
   listaCertamenes.push({ id: Date.now().toString(), nombre: `Certamen ${listaCertamenes.length + 1}`, ponderacion: 25, nota: 0, completada: false });
   renderizarTablaCertamenes();
@@ -488,24 +524,6 @@ function agregarEvaluacionCertamen() {
 
 function eliminarEvaluacionCertamen(idx) {
   listaCertamenes.splice(idx, 1);
-  renderizarTablaCertamenes();
-  calcularCertamenes();
-  guardarCertamenes();
-}
-
-function actualizarDatoCertamen(idx, campo, valor) {
-  if (campo === 'ponderacion') listaCertamenes[idx].ponderacion = Math.min(100, Math.max(1, parseFloat(valor) || 0));
-  else if (campo === 'nota') {
-    const val = parseFloat(valor);
-    if (!isNaN(val)) {
-      listaCertamenes[idx].nota = Math.min(100, Math.max(0, val));
-      listaCertamenes[idx].completada = true;
-    } else {
-      listaCertamenes[idx].nota = 0;
-      listaCertamenes[idx].completada = false;
-    }
-  } else listaCertamenes[idx][campo] = valor;
-  
   renderizarTablaCertamenes();
   calcularCertamenes();
   guardarCertamenes();
@@ -652,7 +670,6 @@ function renderizarAsistencia() {
   asistenciaUsuario.forEach((item, idx) => {
     const porc = item.totales > 0 ? Math.round((item.asistidas / item.totales) * 100) : 0;
     
-    // Margen de inasistencias permitidas
     const maxFaltas = Math.floor(item.totales * (1 - item.minRequerido / 100));
     const faltasActuales = item.totales - item.asistidas;
     const margenRestante = maxFaltas - faltasActuales;
@@ -756,7 +773,6 @@ function renderizarHorario() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Validar topes de horario
   const conflictos = detectarConflictosHorario();
   const panelConflictos = document.getElementById('alerta-conflictos');
   const listaTextoConflictos = document.getElementById('lista-conflictos-texto');
@@ -825,10 +841,7 @@ function exportarHorarioPDF() {
   window.print();
 }
 
-// ==========================================
-// RESPALDO Y RESTAURACIÓN (JSON)
-// ==========================================
-
+// --- RESPALDO Y RESTAURACIÓN (JSON) ---
 function exportarRespaldoJSON() {
   const user = localStorage.getItem('usm_user');
   if (!user) {
@@ -897,6 +910,15 @@ function importarRespaldoJSON(event) {
   };
 
   reader.readAsText(file);
+}
+
+// --- REGISTRO DE SERVICE WORKER (PWA) ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registrado:', reg.scope))
+      .catch(err => console.warn('Error en Service Worker:', err));
+  });
 }
 
 document.addEventListener('DOMContentLoaded', cargarPortal);
