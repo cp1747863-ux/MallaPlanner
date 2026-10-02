@@ -63,6 +63,31 @@ function guardarAsistencia() {
   if (user) localStorage.setItem(`usm_asist_${user}`, JSON.stringify(asistenciaUsuario));
 }
 
+// --- MODO OSCURO / CLARO ---
+function alternarTema() {
+  document.body.classList.toggle('light-mode');
+  const esClaro = document.body.classList.contains('light-mode');
+  
+  const icon = document.getElementById('theme-icon');
+  const text = document.getElementById('theme-text');
+  
+  if (icon) icon.textContent = esClaro ? '☀️' : '🌙';
+  if (text) text.textContent = esClaro ? 'Modo Oscuro' : 'Modo Claro';
+  
+  localStorage.setItem('usm_theme', esClaro ? 'light' : 'dark');
+}
+
+function aplicarTemaGuardado() {
+  const temaGuardado = localStorage.getItem('usm_theme');
+  if (temaGuardado === 'light') {
+    document.body.classList.add('light-mode');
+    const icon = document.getElementById('theme-icon');
+    const text = document.getElementById('theme-text');
+    if (icon) icon.textContent = '☀️';
+    if (text) text.textContent = 'Modo Oscuro';
+  }
+}
+
 // --- SESIÓN Y PORTAL ---
 function iniciarSesion(event) {
   event.preventDefault();
@@ -79,6 +104,7 @@ function iniciarSesion(event) {
 }
 
 function cargarPortal() {
+  aplicarTemaGuardado();
   const user = localStorage.getItem('usm_user');
   if (user) {
     document.getElementById('login-screen')?.classList.add('hidden');
@@ -216,6 +242,12 @@ function mostrarMalla() {
     });
 
     actualizarEstadisticasMalla(carreraId);
+    
+    // Si hay una búsqueda previa activa, se re-aplica el filtro
+    const inputFiltro = document.getElementById('input-filtro-malla');
+    if (inputFiltro && inputFiltro.value.trim() !== '') {
+      filtrarMalla(inputFiltro.value);
+    }
   } else if (carreraId) {
     panelAvance?.classList.add('hidden');
     container.innerHTML = `
@@ -224,6 +256,33 @@ function mostrarMalla() {
       </div>
     `;
   }
+}
+
+// --- FILTRADO DE ASIGNATURAS EN MALLA ---
+function filtrarMalla(texto) {
+  const query = texto.toLowerCase().trim();
+  const tarjetas = document.querySelectorAll('#malla-container > div');
+
+  tarjetas.forEach(card => {
+    let algunVisible = false;
+    const ramos = card.querySelectorAll('div[onclick^="rotarEstadoRamo"]');
+
+    ramos.forEach(ramo => {
+      const textoRamo = ramo.textContent.toLowerCase();
+      if (textoRamo.includes(query)) {
+        ramo.style.display = 'flex';
+        algunVisible = true;
+      } else {
+        ramo.style.display = 'none';
+      }
+    });
+
+    if (algunVisible || query === '') {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
 }
 
 function rotarEstadoRamo(codigo) {
@@ -468,6 +527,17 @@ function calcularCertamenes() {
   }
 }
 
+function limpiarCertamenes() {
+  listaCertamenes = [
+    { id: "c1", nombre: "Certamen 1", ponderacion: 30, nota: 0, completada: false },
+    { id: "c2", nombre: "Certamen 2", ponderacion: 30, nota: 0, completada: false },
+    { id: "c3", nombre: "Certamen 3", ponderacion: 40, nota: 0, completada: false }
+  ];
+  renderizarTablaCertamenes();
+  calcularCertamenes();
+  guardarCertamenes();
+}
+
 // --- PRIORIDAD ---
 function calcularPrioridad() {
   const ppa = parseFloat(document.getElementById('prio-ppa')?.value) || 0;
@@ -481,30 +551,51 @@ function calcularPrioridad() {
   if (elPrio) elPrio.textContent = prioridad.toFixed(2);
 }
 
-// --- AGENDA ---
+// --- AGENDA & CALENDARIO ---
 function renderizarAgenda() {
   const tbody = document.getElementById('agenda-container-tabla');
   if (!tbody) return;
   tbody.innerHTML = '';
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
   agendaUsuario.forEach((item, idx) => {
+    const fechaEv = new Date(item.fecha + 'T00:00:00');
+    const difTiempo = fechaEv.getTime() - hoy.getTime();
+    const difDias = Math.ceil(difTiempo / (1000 * 3600 * 24));
+
+    let badgeDias = '';
+    if (difDias < 0) {
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-400">Expirado</span>`;
+    } else if (difDias === 0) {
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">¡Hoy!</span>`;
+    } else if (difDias <= 3) {
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">En ${difDias} días</span>`;
+    } else {
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">En ${difDias} días</span>`;
+    }
+
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-800/50 transition';
     tr.innerHTML = `
       <td class="p-2.5 font-semibold text-slate-100">${item.titulo}</td>
       <td class="p-2.5 text-slate-400">${item.ramo}</td>
       <td class="p-2.5 text-slate-300 font-mono">${item.fecha}</td>
-      <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300">Activo</span></td>
-      <td class="p-2.5 text-center"><button onclick="eliminarItemAgenda(${idx})" class="text-rose-400 font-bold">✕</button></td>
+      <td class="p-2.5 text-center">${badgeDias}</td>
+      <td class="p-2.5 text-center"><button onclick="eliminarItemAgenda(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
 function agregarItemAgenda() {
-  const titulo = prompt("Título del evento:", "Certamen");
-  const fecha = prompt("Fecha (AAAA-MM-DD):", "2026-11-05");
+  const titulo = prompt("Título del evento:", "Certamen 1");
+  const ramo = prompt("Asignatura o Código:", "INF-110");
+  const fecha = prompt("Fecha límite (AAAA-MM-DD):", new Date().toISOString().slice(0, 10));
+
   if (titulo && fecha) {
-    agendaUsuario.push({ id: Date.now().toString(), titulo, ramo: "General", fecha });
+    agendaUsuario.push({ id: Date.now().toString(), titulo, ramo: ramo || "General", fecha });
     renderizarAgenda();
     guardarAgenda();
   }
@@ -516,6 +607,43 @@ function eliminarItemAgenda(idx) {
   guardarAgenda();
 }
 
+function exportarCalendarICS() {
+  if (agendaUsuario.length === 0) {
+    alert("No hay eventos en tu agenda para exportar.");
+    return;
+  }
+
+  let icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//MallaPlanner USM//NONSGML v1.0//ES",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH"
+  ];
+
+  agendaUsuario.forEach(ev => {
+    const fechaClean = ev.fecha.replace(/-/g, "");
+    icsContent.push("BEGIN:VEVENT");
+    icsContent.push(`SUMMARY:${ev.titulo} (${ev.ramo})`);
+    icsContent.push(`DTSTART;VALUE=DATE:${fechaClean}`);
+    icsContent.push(`DTEND;VALUE=DATE:${fechaClean}`);
+    icsContent.push(`DESCRIPTION:Evaluación registrada en MallaPlanner USM para ${ev.ramo}`);
+    icsContent.push("STATUS:CONFIRMED");
+    icsContent.push("END:VEVENT");
+  });
+
+  icsContent.push("END:VCALENDAR");
+
+  const blob = new Blob([icsContent.join("\r\n")], { type: 'text/calendar;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'Agenda_USM_MallaPlanner.ics');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // --- ASISTENCIA ---
 function renderizarAsistencia() {
   const tbody = document.getElementById('asistencia-container-tabla');
@@ -523,30 +651,50 @@ function renderizarAsistencia() {
   tbody.innerHTML = '';
   asistenciaUsuario.forEach((item, idx) => {
     const porc = item.totales > 0 ? Math.round((item.asistidas / item.totales) * 100) : 0;
+    
+    // Margen de inasistencias permitidas
+    const maxFaltas = Math.floor(item.totales * (1 - item.minRequerido / 100));
+    const faltasActuales = item.totales - item.asistidas;
+    const margenRestante = maxFaltas - faltasActuales;
+
+    let badgeEstado = '';
+    if (porc < item.minRequerido) {
+      badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">Riesgo NCR (${porc}%)</span>`;
+    } else {
+      badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">OK (${porc}%) - Puedes faltar ${Math.max(0, margenRestante)} más</span>`;
+    }
+
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-800/50 transition';
     tr.innerHTML = `
       <td class="p-2.5 font-semibold text-slate-200">${item.ramo}</td>
-      <td class="p-2.5 text-center"><input type="number" value="${item.asistidas}" onchange="actualizarAsistencia(${idx}, 'asistidas', this.value)" class="w-16 bg-slate-800 rounded text-center text-white"></td>
-      <td class="p-2.5 text-center"><input type="number" value="${item.totales}" onchange="actualizarAsistencia(${idx}, 'totales', this.value)" class="w-16 bg-slate-800 rounded text-center text-white"></td>
+      <td class="p-2.5 text-center"><input type="number" value="${item.asistidas}" min="0" onchange="actualizarAsistencia(${idx}, 'asistidas', this.value)" class="w-16 bg-slate-800 border border-slate-700 rounded text-center text-white"></td>
+      <td class="p-2.5 text-center"><input type="number" value="${item.totales}" min="1" onchange="actualizarAsistencia(${idx}, 'totales', this.value)" class="w-16 bg-slate-800 border border-slate-700 rounded text-center text-white"></td>
       <td class="p-2.5 text-center font-bold text-slate-300">${item.minRequerido}%</td>
-      <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${porc >= item.minRequerido ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${porc}%</span></td>
-      <td class="p-2.5 text-center"><button onclick="eliminarAsistencia(${idx})" class="text-rose-400 font-bold">✕</button></td>
+      <td class="p-2.5 text-center">${badgeEstado}</td>
+      <td class="p-2.5 text-center"><button onclick="eliminarAsistencia(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
 function actualizarAsistencia(idx, campo, valor) {
-  asistenciaUsuario[idx][campo] = parseInt(valor) || 0;
+  asistenciaUsuario[idx][campo] = Math.max(0, parseInt(valor) || 0);
   renderizarAsistencia();
   guardarAsistencia();
 }
 
 function agregarAsistencia() {
-  const ramo = prompt("Nombre de la asignatura:", "Laboratorio");
+  const ramo = prompt("Nombre de la asignatura / clase:", "Laboratorio de Física");
+  const req = prompt("Porcentaje mínimo de asistencia requerido (%):", "80");
   if (ramo) {
-    asistenciaUsuario.push({ id: Date.now().toString(), ramo, asistidas: 10, totales: 12, minRequerido: 75 });
+    asistenciaUsuario.push({ 
+      id: Date.now().toString(), 
+      ramo, 
+      asistidas: 10, 
+      totales: 12, 
+      minRequerido: parseInt(req) || 75 
+    });
     renderizarAsistencia();
     guardarAsistencia();
   }
@@ -561,8 +709,11 @@ function eliminarAsistencia(idx) {
 // --- HORARIO ---
 function cargarOpcionesRamosHorario() {
   const datalist = document.getElementById('lista-ramos-cursando');
-  if (!datalist) return;
-  datalist.innerHTML = '';
+  const datalistCert = document.getElementById('lista-ramos-cursando-certamen');
+
+  if (datalist) datalist.innerHTML = '';
+  if (datalistCert) datalistCert.innerHTML = '';
+
   const carreraId = document.getElementById('select-carrera')?.value;
   if (carreraId && datosUSM.mallas[carreraId]) {
     datosUSM.mallas[carreraId].forEach(sem => {
@@ -570,7 +721,9 @@ function cargarOpcionesRamosHorario() {
         if ((progresoUsuario[r.codigo] || 'pendiente') === 'cursando') {
           const opt = document.createElement('option');
           opt.value = `${r.nombre} (${r.codigo})`;
-          datalist.appendChild(opt);
+          
+          if (datalist) datalist.appendChild(opt.cloneNode(true));
+          if (datalistCert) datalistCert.appendChild(opt);
         }
       });
     });
@@ -603,19 +756,34 @@ function renderizarHorario() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
+  // Validar topes de horario
+  const conflictos = detectarConflictosHorario();
+  const panelConflictos = document.getElementById('alerta-conflictos');
+  const listaTextoConflictos = document.getElementById('lista-conflictos-texto');
+
+  if (panelConflictos && listaTextoConflictos) {
+    if (conflictos.length > 0) {
+      panelConflictos.classList.remove('hidden');
+      listaTextoConflictos.innerHTML = conflictos.map(c => `<li>Tope el día <strong>${c.dia}</strong> en bloque <strong>${c.bloque}</strong>: ${c.ramos.join(' con ')}</li>`).join('');
+    } else {
+      panelConflictos.classList.add('hidden');
+    }
+  }
+
   BLOQUES_USM.forEach(bUSM => {
     const tr = document.createElement('tr');
     tr.className = 'border-b border-slate-800/80';
-    let celdasHTML = `<td class="p-2 border-r border-slate-700 bg-slate-900/90 text-center font-bold text-sky-400">${bUSM.id}</td>`;
+    let celdasHTML = `<td class="p-2 border-r border-slate-700 bg-slate-900/90 text-center font-bold text-sky-400 sticky left-0 z-10">${bUSM.id}<br><span class="text-[9px] font-normal text-slate-400">${bUSM.hora}</span></td>`;
 
     DIAS_USM.forEach(dia => {
       const bloques = horarioUsuario.filter(x => x.dia === dia && x.bloque === bUSM.id);
       if (bloques.length === 0) {
         celdasHTML += `<td class="p-1 border-r border-slate-800/60 h-16 text-center text-slate-700">--</td>`;
       } else {
+        const esConflicto = bloques.length > 1;
         const contenido = bloques.map(item => `
-          <div class="p-1.5 rounded border bg-sky-950/80 border-sky-500/50 text-sky-200 text-[11px] relative group">
-            <button onclick="eliminarBloqueHorario('${item.id}')" class="absolute top-1 right-1 text-slate-400 hover:text-rose-400 opacity-0 group-hover:opacity-100">✕</button>
+          <div class="p-1.5 rounded border ${esConflicto ? 'bg-rose-950/80 border-rose-500 text-rose-200' : 'bg-sky-950/80 border-sky-500/50 text-sky-200'} text-[11px] relative group my-0.5">
+            <button onclick="eliminarBloqueHorario('${item.id}')" class="absolute top-1 right-1 text-slate-400 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition no-print">✕</button>
             <p class="font-bold truncate">${item.ramo}</p>
             <span class="text-[9px] text-slate-400">${item.tipo} • ${item.sala}</span>
           </div>
@@ -628,19 +796,39 @@ function renderizarHorario() {
   });
 }
 
+function detectarConflictosHorario() {
+  const conflictos = [];
+  DIAS_USM.forEach(dia => {
+    BLOQUES_USM.forEach(bUSM => {
+      const enMismoBloque = horarioUsuario.filter(x => x.dia === dia && x.bloque === bUSM.id);
+      if (enMismoBloque.length > 1) {
+        conflictos.push({
+          dia: dia.charAt(0).toUpperCase() + dia.slice(1),
+          bloque: bUSM.id,
+          ramos: enMismoBloque.map(x => x.ramo)
+        });
+      }
+    });
+  });
+  return conflictos;
+}
+
 function limpiarHorario() {
-  horarioUsuario = [];
-  renderizarHorario();
-  guardarHorario();
+  if (confirm("¿Seguro que deseas borrar todos los bloques de tu horario semanal?")) {
+    horarioUsuario = [];
+    renderizarHorario();
+    guardarHorario();
+  }
+}
+
+function exportarHorarioPDF() {
+  window.print();
 }
 
 // ==========================================
-// FASE 1: RESPALDO Y RESTAURACIÓN (JSON)
+// RESPALDO Y RESTAURACIÓN (JSON)
 // ==========================================
 
-/**
- * Exporta todo el estado de LocalStorage del usuario activo a un archivo JSON descargable
- */
 function exportarRespaldoJSON() {
   const user = localStorage.getItem('usm_user');
   if (!user) {
@@ -670,9 +858,6 @@ function exportarRespaldoJSON() {
   downloadAnchor.remove();
 }
 
-/**
- * Lee e importa un archivo JSON local para restaurar la sesión activa
- */
 function importarRespaldoJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
