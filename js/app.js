@@ -19,18 +19,37 @@ let asistenciaUsuario = [
   { id: "as2", ramo: "Laboratorio de Física", asistidas: 7, totales: 8, minRequerido: 80 }
 ];
 
+// BLOQUES USM OFICIALES (70 min de clase + 10 min de descanso)
 const BLOQUES_USM = [
   { id: "1-2", hora: "08:15 - 09:25" },
   { id: "3-4", hora: "09:35 - 10:45" },
   { id: "5-6", hora: "10:55 - 12:05" },
   { id: "7-8", hora: "12:15 - 13:25" },
-  { id: "9-10", hora: "14:30 - 15:40" },
-  { id: "11-12", hora: "15:50 - 17:00" },
-  { id: "13-14", hora: "17:10 - 18:20" },
-  { id: "15-16", hora: "18:30 - 19:40" }
+  { id: "9-10", hora: "13:35 - 14:45" },
+  { id: "11-12", hora: "14:55 - 16:05" },
+  { id: "13-14", hora: "16:15 - 17:25" },
+  { id: "15-16", hora: "17:35 - 18:45" },
+  { id: "17-18", hora: "18:55 - 20:05" }
 ];
 
 const DIAS_USM = ["lunes", "martes", "miercoles", "jueves", "viernes"];
+
+// --- MODAL FEEDBACK ---
+function abrirModalFeedback() {
+  const modal = document.getElementById('modal-feedback');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+}
+
+function cerrarModalFeedback() {
+  const modal = document.getElementById('modal-feedback');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
 
 // --- FUNCIONES DE GUARDADO PERMANENTE ---
 function guardarProgreso() {
@@ -83,7 +102,7 @@ function aplicarTemaGuardado() {
     document.body.classList.add('light-mode');
     const icon = document.getElementById('theme-icon');
     const text = document.getElementById('theme-text');
-    if (icon) icon.textContent = '☀️️';
+    if (icon) icon.textContent = '☀️';
     if (text) text.textContent = 'Modo Oscuro';
   }
 }
