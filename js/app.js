@@ -1040,3 +1040,64 @@ function calcularNotaDesglosada(indexEvaluacion) {
     }
   }
 }
+/* --- MÓDULO DE DESGLOSE POR RÚBRICAS Y COMPETENCIAS --- */
+function toggleDesgloseCertamen(indexEvaluacion) {
+  const filaPrincipal = document.getElementById(`eval-row-${indexEvaluacion}`);
+  if (!filaPrincipal) return;
+  let filaSubcriterios = document.getElementById(`sub-row-${indexEvaluacion}`);
+
+  if (filaSubcriterios) {
+    filaSubcriterios.classList.toggle('hidden');
+  } else {
+    const nuevaFila = document.createElement('tr');
+    nuevaFila.id = `sub-row-${indexEvaluacion}`;
+    nuevaFila.className = 'bg-slate-100/80 dark:bg-slate-900/80 text-xs border-b border-slate-200 dark:border-slate-800';
+    nuevaFila.innerHTML = `
+      <td colspan="5" class="p-4 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-sky-500">📊 Desglose por Competencias / Rúbrica</span>
+          <button onclick="agregarSubcriterio(${indexEvaluacion})" class="bg-sky-500 text-slate-950 font-bold px-2 py-1 rounded text-[10px]">+ Añadir Parte</button>
+        </div>
+        <div id="subcriterios-list-${indexEvaluacion}" class="space-y-2">
+          <p class="text-[11px] text-slate-500 italic">No hay subcriterios definidos. Usa el botón superior para dividir esta nota (deben sumar 100%).</p>
+        </div>
+      </td>
+    `;
+    filaPrincipal.after(nuevaFila);
+  }
+}
+
+function agregarSubcriterio(indexEvaluacion) {
+  const contenedor = document.getElementById(`subcriterios-list-${indexEvaluacion}`);
+  if (!contenedor) return;
+  if (contenedor.querySelector('p')) contenedor.innerHTML = '';
+  const divSub = document.createElement('div');
+  divSub.className = 'flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-700';
+  divSub.innerHTML = `
+    <input type="text" placeholder="Nombre (ej. Informe)" class="sub-nombre flex-grow bg-slate-50 dark:bg-slate-900 border rounded px-2 py-1 text-xs">
+    <div class="flex items-center gap-1"><span class="text-[10px]">Peso:</span><input type="number" value="50" min="1" max="100" class="sub-peso w-16 bg-slate-50 dark:bg-slate-900 border rounded px-2 py-1 text-xs font-bold"></div>
+    <div class="flex items-center gap-1"><span class="text-[10px]">Nota:</span><input type="number" value="55" min="1" max="100" oninput="calcularNotaDesglosada(${indexEvaluacion})" class="sub-nota w-16 bg-slate-50 dark:bg-slate-900 border rounded px-2 py-1 text-xs font-bold text-sky-500"></div>
+    <button onclick="this.parentElement.remove(); calcularNotaDesglosada(${indexEvaluacion});" class="text-rose-500 font-bold px-1.5 text-sm">&times;</button>
+  `;
+  contenedor.appendChild(divSub);
+}
+
+function calcularNotaDesglosada(indexEvaluacion) {
+  const contenedor = document.getElementById(`subcriterios-list-${indexEvaluacion}`);
+  if (!contenedor) return;
+  const items = contenedor.querySelectorAll('.flex.items-center.gap-2');
+  let notaFinalPonderada = 0, porcentajeTotalAcumulado = 0;
+  items.forEach(item => {
+    const peso = parseFloat(item.querySelector('.sub-peso').value) || 0;
+    const nota = parseFloat(item.querySelector('.sub-nota').value) || 0;
+    notaFinalPonderada += (nota * (peso / 100));
+    porcentajeTotalAcumulado += peso;
+  });
+  if (porcentajeTotalAcumulado === 100 && items.length > 0) {
+    const inputNotaPrincipal = document.querySelector(`input.nota-evaluacion[data-index="${indexEvaluacion}"]`);
+    if (inputNotaPrincipal) {
+      inputNotaPrincipal.value = Math.round(notaFinalPonderada);
+      if (typeof calcularCertamenes === 'function') calcularCertamenes();
+    }
+  }
+}
