@@ -604,7 +604,7 @@
 
             <div>
               <label class="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300" for="ai-api-key">Tu API Key Personal:</label>
-              <input type="password" id="ai-api-key" placeholder="sk-..." class="w-full bg-slate-100 dark:bg-slate-700/80 border border-slate-300 dark:border-slate-600 rounded p-2 text-xs text-slate-900 dark:text-white font-mono">
+              <input type="password" id="ai-api-key" placeholder="sk-... o AQ..." class="w-full bg-slate-100 dark:bg-slate-700/80 border border-slate-300 dark:border-slate-600 rounded p-2 text-xs text-slate-900 dark:text-white font-mono">
             </div>
 
             <button onclick="guardarApiKey()" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-4 py-2.5 rounded text-xs transition w-full shadow-md">
@@ -644,7 +644,7 @@
           <div class="flex items-start space-x-2">
             <div class="bg-sky-500 text-slate-950 rounded-full w-6 h-6 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">IA</div>
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 dark:text-slate-200 space-y-1">
-              <p>¡Hola! Soy tu tutor universitario sin filtros. ¿Qué conversamos hoy? ✌️</p>
+              <p>¡Hola! Soy tu tutor universitario sin filtros. ¿Qué conversamos hoy? ✌️️</p>
               <div class="flex flex-wrap gap-1 pt-1">
                 <button onclick="enviarSugerenciaChat('¿Cómo va mi avance?')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">📊 ¿Cómo va mi avance?</button>
                 <button onclick="enviarSugerenciaChat('Me quiero ir a la playa')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">🏖️ Playa o U</button>
@@ -828,8 +828,8 @@
         if (contenedor && contenedor.lastElementChild) {
           contenedor.lastElementChild.remove();
         }
-        console.error(error);
-        agregarMensajeAlChat('IA', '❌ Error al conectar con la API de IA. Revisa si tu clave es correcta o si tienes créditos disponibles.');
+        console.error("Detalle del error:", error);
+        agregarMensajeAlChat('IA', `❌ Error al conectar con la API (${error.message}). Revisa si tu clave es correcta o la cuota/créditos de tu cuenta.`);
       }
     }
 
@@ -841,7 +841,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${apiKey.trim()}`
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
@@ -854,36 +854,46 @@
       });
 
       const data = await response.json();
-      if (data.error) throw new Error(data.error.message);
+      if (!response.ok || data.error) throw new Error(data.error?.message || `Error HTTP ${response.status}`);
       return data.choices[0].message.content;
     }
 
-async function llamarGemini(prompt, apiKey) {
-  const ppa = document.getElementById('res-ppa-valor')?.textContent || 'No calculado';
-  const systemPrompt = `Eres un tutor universitario deslenguado, cercano y sin filtros. El PPA del alumno es ${ppa}. Responde con espontaneidad, humor y total libertad conversacional.`;
+    async function llamarGemini(prompt, apiKey) {
+      const ppa = document.getElementById('res-ppa-valor')?.textContent || 'No calculado';
+      const systemPrompt = `Eres un tutor universitario cercano, empático y directo. El PPA del alumno es ${ppa}. Responde de forma breve y útil.`;
 
-  const keyLimpia = apiKey.trim();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${keyLimpia}`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        { role: 'user', parts: [{ text: `${systemPrompt}\n\nEstudiante: ${prompt}` }] }
-      ]
-    })
-  });
+      const keyLimpia = apiKey.trim();
+      const modelos = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+      let ultimoError = null;
 
-  const data = await response.json();
+      for (const modelo of modelos) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${keyLimpia}`;
 
-  if (!response.ok || data.error) {
-    console.error("Error de Gemini API:", data);
-    throw new Error(data.error?.message || `Error HTTP ${response.status}`);
-  }
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                { role: 'user', parts: [{ text: `${systemPrompt}\n\nEstudiante: ${prompt}` }] }
+              ]
+            })
+          });
 
-  return data.candidates[0].content.parts[0].text;
-}
+          const data = await response.json();
+
+          if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            return data.candidates[0].content.parts[0].text;
+          } else if (data.error) {
+            ultimoError = data.error.message;
+          }
+        } catch (err) {
+          ultimoError = err.message;
+        }
+      }
+
+      throw new Error(ultimoError || 'No se pudo obtener respuesta de Google Gemini.');
+    }
 
     document.addEventListener('DOMContentLoaded', cargarApiKeyGuardada);
   </script>
