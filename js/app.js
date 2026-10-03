@@ -36,18 +36,16 @@ const DIAS_USM = ["lunes", "martes", "miercoles", "jueves", "viernes"];
 
 // --- MODAL FEEDBACK ---
 function abrirModalFeedback() {
-  const modal = document.getElementById('modal-feedback');
+  const modal = document.getElementById('feedback-modal');
   if (modal) {
     modal.classList.remove('hidden');
-    modal.classList.add('flex');
   }
 }
 
 function cerrarModalFeedback() {
-  const modal = document.getElementById('modal-feedback');
+  const modal = document.getElementById('feedback-modal');
   if (modal) {
     modal.classList.add('hidden');
-    modal.classList.remove('flex');
   }
 }
 
@@ -82,28 +80,35 @@ function guardarAsistencia() {
   if (user) localStorage.setItem(`usm_asist_${user}`, JSON.stringify(asistenciaUsuario));
 }
 
-// --- MODO OSCURO / CLARO ---
+// --- MODO OSCURO / CLARO (UNIFICADO CON TAILWIND) ---
 function alternarTema() {
-  document.body.classList.toggle('light-mode');
-  const esClaro = document.body.classList.contains('light-mode');
+  const htmlEl = document.documentElement;
+  htmlEl.classList.toggle('dark');
+  const esOscuro = htmlEl.classList.contains('dark');
   
   const icon = document.getElementById('theme-icon');
   const text = document.getElementById('theme-text');
   
-  if (icon) icon.textContent = esClaro ? '☀️' : '🌙';
-  if (text) text.textContent = esClaro ? 'Modo Oscuro' : 'Modo Claro';
+  if (icon) icon.textContent = esOscuro ? '🌙' : '☀️';
+  if (text) text.textContent = esOscuro ? 'Modo Claro' : 'Modo Oscuro';
   
-  localStorage.setItem('usm_theme', esClaro ? 'light' : 'dark');
+  localStorage.setItem('usm_theme', esOscuro ? 'dark' : 'light');
 }
 
 function aplicarTemaGuardado() {
   const temaGuardado = localStorage.getItem('usm_theme');
+  const htmlEl = document.documentElement;
+  const icon = document.getElementById('theme-icon');
+  const text = document.getElementById('theme-text');
+
   if (temaGuardado === 'light') {
-    document.body.classList.add('light-mode');
-    const icon = document.getElementById('theme-icon');
-    const text = document.getElementById('theme-text');
+    htmlEl.classList.remove('dark');
     if (icon) icon.textContent = '☀️';
     if (text) text.textContent = 'Modo Oscuro';
+  } else {
+    htmlEl.classList.add('dark');
+    if (icon) icon.textContent = '🌙';
+    if (text) text.textContent = 'Modo Claro';
   }
 }
 
@@ -163,20 +168,20 @@ function cerrarSesion() {
 }
 
 function cambiarPestana(pestana) {
-  const secciones = ['sec-malla', 'sec-ppa', 'sec-certamenes', 'sec-prioridad', 'sec-agenda', 'sec-horario'];
-  const tabs = ['tab-malla', 'tab-ppa', 'tab-certamenes', 'tab-prioridad', 'tab-agenda', 'tab-horario'];
+  const secciones = ['sec-malla', 'sec-ppa', 'sec-certamenes', 'sec-prioridad', 'sec-agenda', 'sec-horario', 'sec-config-api'];
+  const tabs = ['tab-malla', 'tab-ppa', 'tab-certamenes', 'tab-prioridad', 'tab-agenda', 'tab-horario', 'tab-config-api'];
 
   secciones.forEach(s => document.getElementById(s)?.classList.add('hidden'));
   tabs.forEach(t => {
     const el = document.getElementById(t);
-    if (el) el.className = 'py-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap';
+    if (el) el.className = 'py-3 font-semibold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition whitespace-nowrap';
   });
 
   const secActiva = document.getElementById(`sec-${pestana}`);
   const tabActivo = document.getElementById(`tab-${pestana}`);
 
   if (secActiva) secActiva.classList.remove('hidden');
-  if (tabActivo) tabActivo.className = 'py-3 font-semibold border-b-2 border-sky-400 text-sky-400 transition whitespace-nowrap';
+  if (tabActivo) tabActivo.className = 'py-3 font-semibold border-b-2 border-sky-500 text-sky-600 dark:text-sky-400 transition whitespace-nowrap';
 }
 
 function inicializarSedes() {
@@ -229,7 +234,7 @@ function mostrarMalla() {
 
     datosUSM.mallas[carreraId].forEach(sem => {
       const card = document.createElement('div');
-      card.className = 'bg-slate-800/90 p-4 rounded-xl border border-slate-700 shadow-lg space-y-3';
+      card.className = 'bg-white/90 dark:bg-slate-800/90 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg space-y-3';
       
       const ramosHTML = sem.ramos.map(r => {
         const estado = progresoUsuario[r.codigo] || 'pendiente';
@@ -241,7 +246,7 @@ function mostrarMalla() {
             <div>
               <p class="font-semibold text-xs ${estilos.texto}">${r.nombre}</p>
               <div class="flex items-center space-x-2 mt-0.5">
-                <span class="text-[10px] text-slate-400">${r.codigo}</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400">${r.codigo}</span>
                 <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${estilos.badge}">${estado}</span>
               </div>
             </div>
@@ -251,9 +256,9 @@ function mostrarMalla() {
       }).join('');
 
       card.innerHTML = `
-        <h3 class="text-sm font-bold text-sky-400 border-b border-slate-700 pb-2 flex justify-between items-center">
+        <h3 class="text-sm font-bold text-sky-600 dark:text-sky-400 border-b border-slate-200 dark:border-slate-700 pb-2 flex justify-between items-center">
           <span>Semestre ${sem.semestre}</span>
-          <span class="text-xs font-normal text-slate-400">${sem.ramos.length} Ramos</span>
+          <span class="text-xs font-normal text-slate-500 dark:text-slate-400">${sem.ramos.length} Ramos</span>
         </h3>
         <div class="space-y-2">${ramosHTML}</div>
       `;
@@ -269,8 +274,8 @@ function mostrarMalla() {
   } else if (carreraId) {
     panelAvance?.classList.add('hidden');
     container.innerHTML = `
-      <div class="col-span-full bg-slate-800/40 border border-slate-700/60 rounded-xl p-8 text-center">
-        <p class="text-slate-400 text-sm">La malla curricular de esta carrera se encuentra en proceso de carga o puedes agregarla en mallas.js.</p>
+      <div class="col-span-full bg-white/40 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl p-8 text-center">
+        <p class="text-slate-500 dark:text-slate-400 text-sm">La malla curricular de esta carrera se encuentra en proceso de carga o puedes agregarla en mallas.js.</p>
       </div>
     `;
   }
@@ -321,24 +326,24 @@ function obtenerEstilosRamo(estado) {
   switch (estado) {
     case 'aprobado':
       return {
-        box: 'bg-emerald-950/40 border-emerald-500/50 hover:border-emerald-400',
-        texto: 'text-emerald-200 line-through decoration-emerald-500/50',
-        badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
-        creditos: 'bg-emerald-500/20 text-emerald-300'
+        box: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-500/50 hover:border-emerald-400',
+        texto: 'text-emerald-900 dark:text-emerald-200 line-through decoration-emerald-500/50',
+        badge: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30',
+        creditos: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
       };
     case 'cursando':
       return {
-        box: 'bg-sky-950/40 border-sky-500/50 hover:border-sky-400',
-        texto: 'text-sky-200 font-bold',
-        badge: 'bg-sky-500/20 text-sky-300 border border-sky-500/30',
-        creditos: 'bg-sky-500/20 text-sky-300'
+        box: 'bg-sky-50 dark:bg-sky-950/40 border-sky-300 dark:border-sky-500/50 hover:border-sky-400',
+        texto: 'text-sky-900 dark:text-sky-200 font-bold',
+        badge: 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-500/30',
+        creditos: 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300'
       };
     default:
       return {
-        box: 'bg-slate-900/80 border-slate-700 hover:border-slate-500',
-        texto: 'text-slate-200',
-        badge: 'bg-slate-800 text-slate-400 border border-slate-700',
-        creditos: 'bg-slate-800 text-slate-400'
+        box: 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500',
+        texto: 'text-slate-800 dark:text-slate-200',
+        badge: 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700',
+        creditos: 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
       };
   }
 }
@@ -393,13 +398,13 @@ function renderizarTablaPPA() {
 
   listaRamosPPA.forEach((item, idx) => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/50 transition';
+    tr.className = 'hover:bg-slate-100 dark:hover:bg-slate-800/50 transition';
     tr.innerHTML = `
-      <td class="p-2.5"><input type="text" value="${item.nombre}" onchange="actualizarDatoPPA(${idx}, 'nombre', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200"></td>
-      <td class="p-2.5"><input type="number" min="1" max="30" value="${item.creditos}" onchange="actualizarDatoPPA(${idx}, 'creditos', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-center"></td>
-      <td class="p-2.5"><input type="number" min="0" max="100" value="${item.nota || ''}" onchange="actualizarDatoPPA(${idx}, 'nota', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-center font-semibold"></td>
-      <td class="p-2.5 text-center">${item.nota >= 55 ? '<span class="text-emerald-400 font-bold">Aprobado</span>' : '<span class="text-rose-400">Reprobado</span>'}</td>
-      <td class="p-2.5 text-center"><button onclick="eliminarRamoPPA(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button></td>
+      <td class="p-2.5"><input type="text" value="${item.nombre}" onchange="actualizarDatoPPA(${idx}, 'nombre', this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-200"></td>
+      <td class="p-2.5"><input type="number" min="1" max="30" value="${item.creditos}" onchange="actualizarDatoPPA(${idx}, 'creditos', this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-200 text-center"></td>
+      <td class="p-2.5"><input type="number" min="0" max="100" value="${item.nota || ''}" onchange="actualizarDatoPPA(${idx}, 'nota', this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-200 text-center font-semibold"></td>
+      <td class="p-2.5 text-center">${item.nota >= 55 ? '<span class="text-emerald-600 dark:text-emerald-400 font-bold">Aprobado</span>' : '<span class="text-rose-600 dark:text-rose-400">Reprobado</span>'}</td>
+      <td class="p-2.5 text-center"><button onclick="eliminarRamoPPA(${idx})" class="text-rose-500 hover:text-rose-700 font-bold">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -495,13 +500,19 @@ function renderizarTablaCertamenes() {
   tbody.innerHTML = '';
   listaCertamenes.forEach((item, idx) => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/50 transition';
+    tr.id = `eval-row-${idx}`;
+    tr.className = 'hover:bg-slate-100 dark:hover:bg-slate-800/50 transition';
     tr.innerHTML = `
-      <td class="p-2.5"><input type="text" value="${item.nombre}" onchange="actualizarDatoCertamen(${idx}, 'nombre', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200"></td>
-      <td class="p-2.5"><input type="number" min="1" max="100" value="${item.ponderacion}" onchange="actualizarDatoCertamen(${idx}, 'ponderacion', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-center font-bold"></td>
-      <td class="p-2.5"><input type="number" min="0" max="100" value="${item.completada ? item.nota : ''}" placeholder="Pendiente" onchange="actualizarDatoCertamen(${idx}, 'nota', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 text-center font-semibold"></td>
-      <td class="p-2.5 text-center">${item.completada ? '<span class="text-sky-400 font-bold">Rendida</span>' : '<span class="text-amber-400">Pendiente</span>'}</td>
-      <td class="p-2.5 text-center"><button onclick="eliminarEvaluacionCertamen(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button></td>
+      <td class="p-2.5">
+        <div class="flex items-center gap-2">
+          <input type="text" value="${item.nombre}" onchange="actualizarDatoCertamen(${idx}, 'nombre', this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-200">
+          <button onclick="toggleDesgloseCertamen(${idx})" title="Desglosar en rúbrica o competencias" class="text-xs bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded font-bold hover:bg-sky-200">📊</button>
+        </div>
+      </td>
+      <td class="p-2.5"><input type="number" min="1" max="100" value="${item.ponderacion}" onchange="actualizarDatoCertamen(${idx}, 'ponderacion', this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-200 text-center font-bold"></td>
+      <td class="p-2.5"><input type="number" min="0" max="100" data-index="${idx}" value="${item.completada ? item.nota : ''}" placeholder="Pendiente" onchange="actualizarDatoCertamen(${idx}, 'nota', this.value)" class="nota-evaluacion w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-200 text-center font-semibold"></td>
+      <td class="p-2.5 text-center">${item.completada ? '<span class="text-sky-600 dark:text-sky-400 font-bold">Rendida</span>' : '<span class="text-amber-600 dark:text-amber-400">Pendiente</span>'}</td>
+      <td class="p-2.5 text-center"><button onclick="eliminarEvaluacionCertamen(${idx})" class="text-rose-500 hover:text-rose-700 font-bold">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -604,23 +615,23 @@ function renderizarAgenda() {
 
     let badgeDias = '';
     if (difDias < 0) {
-      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-400">Expirado</span>`;
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400">Expirado</span>`;
     } else if (difDias === 0) {
-      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">¡Hoy!</span>`;
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30">¡Hoy!</span>`;
     } else if (difDias <= 3) {
-      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">En ${difDias} días</span>`;
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">En ${difDias} días</span>`;
     } else {
-      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">En ${difDias} días</span>`;
+      badgeDias = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-500/30">En ${difDias} días</span>`;
     }
 
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/50 transition';
+    tr.className = 'hover:bg-slate-100 dark:hover:bg-slate-800/50 transition';
     tr.innerHTML = `
-      <td class="p-2.5 font-semibold text-slate-100">${item.titulo}</td>
-      <td class="p-2.5 text-slate-400">${item.ramo}</td>
-      <td class="p-2.5 text-slate-300 font-mono">${item.fecha}</td>
+      <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-100">${item.titulo}</td>
+      <td class="p-2.5 text-slate-500 dark:text-slate-400">${item.ramo}</td>
+      <td class="p-2.5 text-slate-700 dark:text-slate-300 font-mono">${item.fecha}</td>
       <td class="p-2.5 text-center">${badgeDias}</td>
-      <td class="p-2.5 text-center"><button onclick="eliminarItemAgenda(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button></td>
+      <td class="p-2.5 text-center"><button onclick="eliminarItemAgenda(${idx})" class="text-rose-500 hover:text-rose-700 font-bold">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -695,20 +706,20 @@ function renderizarAsistencia() {
 
     let badgeEstado = '';
     if (porc < item.minRequerido) {
-      badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">Riesgo NCR (${porc}%)</span>`;
+      badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30">Riesgo NCR (${porc}%)</span>`;
     } else {
-      badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">OK (${porc}%) - Puedes faltar ${Math.max(0, margenRestante)} más</span>`;
+      badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">OK (${porc}%) - Puedes faltar ${Math.max(0, margenRestante)} más</span>`;
     }
 
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/50 transition';
+    tr.className = 'hover:bg-slate-100 dark:hover:bg-slate-800/50 transition';
     tr.innerHTML = `
-      <td class="p-2.5 font-semibold text-slate-200">${item.ramo}</td>
-      <td class="p-2.5 text-center"><input type="number" value="${item.asistidas}" min="0" onchange="actualizarAsistencia(${idx}, 'asistidas', this.value)" class="w-16 bg-slate-800 border border-slate-700 rounded text-center text-white"></td>
-      <td class="p-2.5 text-center"><input type="number" value="${item.totales}" min="1" onchange="actualizarAsistencia(${idx}, 'totales', this.value)" class="w-16 bg-slate-800 border border-slate-700 rounded text-center text-white"></td>
-      <td class="p-2.5 text-center font-bold text-slate-300">${item.minRequerido}%</td>
+      <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200">${item.ramo}</td>
+      <td class="p-2.5 text-center"><input type="number" value="${item.asistidas}" min="0" onchange="actualizarAsistencia(${idx}, 'asistidas', this.value)" class="w-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-center text-slate-900 dark:text-white"></td>
+      <td class="p-2.5 text-center"><input type="number" value="${item.totales}" min="1" onchange="actualizarAsistencia(${idx}, 'totales', this.value)" class="w-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-center text-slate-900 dark:text-white"></td>
+      <td class="p-2.5 text-center font-bold text-slate-700 dark:text-slate-300">${item.minRequerido}%</td>
       <td class="p-2.5 text-center">${badgeEstado}</td>
-      <td class="p-2.5 text-center"><button onclick="eliminarAsistencia(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button></td>
+      <td class="p-2.5 text-center"><button onclick="eliminarAsistencia(${idx})" class="text-rose-500 hover:text-rose-700 font-bold">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -807,23 +818,23 @@ function renderizarHorario() {
 
   BLOQUES_USM.forEach(bUSM => {
     const tr = document.createElement('tr');
-    tr.className = 'border-b border-slate-800/80';
-    let celdasHTML = `<td class="p-2 border-r border-slate-700 bg-slate-900/90 text-center font-bold text-sky-400 sticky left-0 z-10">${bUSM.id}<br><span class="text-[9px] font-normal text-slate-400">${bUSM.hora}</span></td>`;
+    tr.className = 'border-b border-slate-200 dark:border-slate-800/80';
+    let celdasHTML = `<td class="p-2 border-r border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/90 text-center font-bold text-sky-600 dark:text-sky-400 sticky left-0 z-10">${bUSM.id}<br><span class="text-[9px] font-normal text-slate-500 dark:text-slate-400">${bUSM.hora}</span></td>`;
 
     DIAS_USM.forEach(dia => {
       const bloques = horarioUsuario.filter(x => x.dia === dia && x.bloque === bUSM.id);
       if (bloques.length === 0) {
-        celdasHTML += `<td class="p-1 border-r border-slate-800/60 h-16 text-center text-slate-700">--</td>`;
+        celdasHTML += `<td class="p-1 border-r border-slate-200 dark:border-slate-800/60 h-16 text-center text-slate-400 dark:text-slate-700">--</td>`;
       } else {
         const esConflicto = bloques.length > 1;
         const contenido = bloques.map(item => `
-          <div class="p-1.5 rounded border ${esConflicto ? 'bg-rose-950/80 border-rose-500 text-rose-200' : 'bg-sky-950/80 border-sky-500/50 text-sky-200'} text-[11px] relative group my-0.5">
-            <button onclick="eliminarBloqueHorario('${item.id}')" class="absolute top-1 right-1 text-slate-400 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition no-print">✕</button>
+          <div class="p-1.5 rounded border ${esConflicto ? 'bg-rose-100 dark:bg-rose-950/80 border-rose-400 dark:border-rose-500 text-rose-900 dark:text-rose-200' : 'bg-sky-100 dark:bg-sky-950/80 border-sky-300 dark:border-sky-500/50 text-sky-900 dark:text-sky-200'} text-[11px] relative group my-0.5">
+            <button onclick="eliminarBloqueHorario('${item.id}')" class="absolute top-1 right-1 text-slate-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition no-print">✕</button>
             <p class="font-bold truncate">${item.ramo}</p>
-            <span class="text-[9px] text-slate-400">${item.tipo} • ${item.sala}</span>
+            <span class="text-[9px] text-slate-500 dark:text-slate-400">${item.tipo} • ${item.sala}</span>
           </div>
         `).join('');
-        celdasHTML += `<td class="p-1 border-r border-slate-800/60 align-top">${contenido}</td>`;
+        celdasHTML += `<td class="p-1 border-r border-slate-200 dark:border-slate-800/60 align-top">${contenido}</td>`;
       }
     });
     tr.innerHTML = celdasHTML;
@@ -946,19 +957,15 @@ document.addEventListener('DOMContentLoaded', cargarPortal);
    MÓDULO DE DESGLOSE DE NOTAS POR RÚBRICAS / COMPETENCIAS
    ========================================== */
 
-// Estructura para expandir una evaluación en subcriterios (Competencias/Rúbrica)
 function toggleDesgloseCertamen(indexEvaluacion) {
-  // Buscamos si ya existe el contenedor de subcriterios para esta fila
   const filaPrincipal = document.getElementById(`eval-row-${indexEvaluacion}`);
   if (!filaPrincipal) return;
 
   let filaSubcriterios = document.getElementById(`sub-row-${indexEvaluacion}`);
 
   if (filaSubcriterios) {
-    // Si ya existe, lo alternamos (mostrar/ocultar)
     filaSubcriterios.classList.toggle('hidden');
   } else {
-    // Si no existe, lo creamos dinámicamente debajo de la fila principal
     const nuevaFila = document.createElement('tr');
     nuevaFila.id = `sub-row-${indexEvaluacion}`;
     nuevaFila.className = 'bg-slate-100/80 dark:bg-slate-900/80 text-xs border-b border-slate-200 dark:border-slate-800';
@@ -972,13 +979,11 @@ function toggleDesgloseCertamen(indexEvaluacion) {
           </button>
         </div>
         <div id="subcriterios-list-${indexEvaluacion}" class="space-y-2">
-          <!-- Aquí se listarán los subcriterios internos -->
           <p class="text-[11px] text-slate-500 italic">No hay subcriterios definidos. Usa el botón de arriba para agregar partes a esta evaluación (deben sumar 100%).</p>
         </div>
       </td>
     `;
     
-    // Insertamos la fila justo después de la evaluación principal
     filaPrincipal.after(nuevaFila);
   }
 }
@@ -987,12 +992,10 @@ function agregarSubcriterio(indexEvaluacion) {
   const contenedor = document.getElementById(`subcriterios-list-${indexEvaluacion}`);
   if (!contenedor) return;
 
-  // Si estaba el mensaje de "no hay", lo limpiamos
   if (contenedor.querySelector('p')) {
     contenedor.innerHTML = '';
   }
 
-  const idSub = Date.now();
   const divSub = document.createElement('div');
   divSub.className = 'flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-700';
   divSub.innerHTML = `
@@ -1027,77 +1030,13 @@ function calcularNotaDesglosada(indexEvaluacion) {
     porcentajeTotalAcumulado += peso;
   });
 
-  // Si los pesos suman 100%, podemos inyectar el resultado calculado automáticamente en la nota principal del certamen
   if (porcentajeTotalAcumulado === 100 && items.length > 0) {
-    // Buscamos el input de nota principal de esa fila y le asignamos el valor ponderado
     const inputNotaPrincipal = document.querySelector(`input.nota-evaluacion[data-index="${indexEvaluacion}"]`);
     if (inputNotaPrincipal) {
       inputNotaPrincipal.value = Math.round(notaFinalPonderada);
-      // Disparamos el cálculo general de certámenes si existe la función en tu app
       if (typeof calcularCertamenes === 'function') {
         calcularCertamenes();
       }
-    }
-  }
-}
-/* --- MÓDULO DE DESGLOSE POR RÚBRICAS Y COMPETENCIAS --- */
-function toggleDesgloseCertamen(indexEvaluacion) {
-  const filaPrincipal = document.getElementById(`eval-row-${indexEvaluacion}`);
-  if (!filaPrincipal) return;
-  let filaSubcriterios = document.getElementById(`sub-row-${indexEvaluacion}`);
-
-  if (filaSubcriterios) {
-    filaSubcriterios.classList.toggle('hidden');
-  } else {
-    const nuevaFila = document.createElement('tr');
-    nuevaFila.id = `sub-row-${indexEvaluacion}`;
-    nuevaFila.className = 'bg-slate-100/80 dark:bg-slate-900/80 text-xs border-b border-slate-200 dark:border-slate-800';
-    nuevaFila.innerHTML = `
-      <td colspan="5" class="p-4 space-y-3">
-        <div class="flex justify-between items-center">
-          <span class="font-bold text-sky-500">📊 Desglose por Competencias / Rúbrica</span>
-          <button onclick="agregarSubcriterio(${indexEvaluacion})" class="bg-sky-500 text-slate-950 font-bold px-2 py-1 rounded text-[10px]">+ Añadir Parte</button>
-        </div>
-        <div id="subcriterios-list-${indexEvaluacion}" class="space-y-2">
-          <p class="text-[11px] text-slate-500 italic">No hay subcriterios definidos. Usa el botón superior para dividir esta nota (deben sumar 100%).</p>
-        </div>
-      </td>
-    `;
-    filaPrincipal.after(nuevaFila);
-  }
-}
-
-function agregarSubcriterio(indexEvaluacion) {
-  const contenedor = document.getElementById(`subcriterios-list-${indexEvaluacion}`);
-  if (!contenedor) return;
-  if (contenedor.querySelector('p')) contenedor.innerHTML = '';
-  const divSub = document.createElement('div');
-  divSub.className = 'flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-700';
-  divSub.innerHTML = `
-    <input type="text" placeholder="Nombre (ej. Informe)" class="sub-nombre flex-grow bg-slate-50 dark:bg-slate-900 border rounded px-2 py-1 text-xs">
-    <div class="flex items-center gap-1"><span class="text-[10px]">Peso:</span><input type="number" value="50" min="1" max="100" class="sub-peso w-16 bg-slate-50 dark:bg-slate-900 border rounded px-2 py-1 text-xs font-bold"></div>
-    <div class="flex items-center gap-1"><span class="text-[10px]">Nota:</span><input type="number" value="55" min="1" max="100" oninput="calcularNotaDesglosada(${indexEvaluacion})" class="sub-nota w-16 bg-slate-50 dark:bg-slate-900 border rounded px-2 py-1 text-xs font-bold text-sky-500"></div>
-    <button onclick="this.parentElement.remove(); calcularNotaDesglosada(${indexEvaluacion});" class="text-rose-500 font-bold px-1.5 text-sm">&times;</button>
-  `;
-  contenedor.appendChild(divSub);
-}
-
-function calcularNotaDesglosada(indexEvaluacion) {
-  const contenedor = document.getElementById(`subcriterios-list-${indexEvaluacion}`);
-  if (!contenedor) return;
-  const items = contenedor.querySelectorAll('.flex.items-center.gap-2');
-  let notaFinalPonderada = 0, porcentajeTotalAcumulado = 0;
-  items.forEach(item => {
-    const peso = parseFloat(item.querySelector('.sub-peso').value) || 0;
-    const nota = parseFloat(item.querySelector('.sub-nota').value) || 0;
-    notaFinalPonderada += (nota * (peso / 100));
-    porcentajeTotalAcumulado += peso;
-  });
-  if (porcentajeTotalAcumulado === 100 && items.length > 0) {
-    const inputNotaPrincipal = document.querySelector(`input.nota-evaluacion[data-index="${indexEvaluacion}"]`);
-    if (inputNotaPrincipal) {
-      inputNotaPrincipal.value = Math.round(notaFinalPonderada);
-      if (typeof calcularCertamenes === 'function') calcularCertamenes();
     }
   }
 }
