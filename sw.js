@@ -1,6 +1,6 @@
 const CACHE_NAME = 'mallaplanner-v2';
 
-// Lista exacta de archivos locales que existen en tu repositorio GitHub
+// Lista exacta de archivos locales que existen en el repositorio
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -37,7 +37,6 @@ self.addEventListener('activate', (event) => {
 
 // Estrategia de respuesta: Buscar en caché, si no está pedir a la red
 self.addEventListener('fetch', (event) => {
-  // Ignorar peticiones que no sean GET (ej. formularios)
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
@@ -46,7 +45,6 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(event.request).catch(() => {
-        // Si no hay red y es navegación, entregar index.html
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
