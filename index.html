@@ -807,5 +807,163 @@
       return `Entiendo tu consulta sobre "${pregunta}". Como asistente enfocado en tu gestión estudiantil, te sugiero mantener al día tus registros en el <strong>Horario Semanal</strong> y revisar tus plazos en la <strong>Agenda</strong>. ¿Hay algo específico sobre tus ramos o cálculos que desees resolver?`;
     }
   </script>
+<!-- BURBUJA Y VENTANA DEL CHATBOT TUTOR (IA CONVERSACIONAL) -->
+<div id="chatbot-wrapper" class="fixed bottom-5 right-5 z-50 no-print font-sans">
+  <button onclick="toggleChatbot()" id="chatbot-toggle-btn" class="bg-sky-500 hover:bg-sky-600 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105" aria-label="Abrir Asistente IA">
+    <span class="text-xl">🤖</span>
+  </button>
+
+  <div id="chatbot-window" class="hidden absolute bottom-16 right-0 w-80 sm:w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all h-[450px]">
+    <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center border-b border-slate-700">
+      <div class="flex items-center space-x-2">
+        <span class="text-sky-400 text-lg">✨</span>
+        <div>
+          <h3 class="text-xs font-bold">Tutor IA - MallaPlanner (Sin Filtros)</h3>
+          <span class="text-[10px] text-emerald-400 flex items-center gap-1">● Conectado</span>
+        </div>
+      </div>
+      <button onclick="toggleChatbot()" class="text-slate-400 hover:text-white text-sm font-bold">&times;</button>
+    </div>
+
+    <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 text-xs bg-slate-50 dark:bg-slate-900/50">
+      <div class="flex items-start space-x-2">
+        <div class="bg-sky-500 text-slate-950 rounded-full w-6 h-6 flex items-center justify-center font-bold flex-shrink-0">IA</div>
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 dark:text-slate-200 space-y-1">
+          <p>¡Hola! Dímelo todo. ¿Qué locura se te cruza por la cabeza hoy o vienes a sufrir con la malla curricular? ✌️️</p>
+          <div class="flex flex-wrap gap-1 pt-1">
+            <button onclick="enviarSugerenciaChat('¿Cuánto falta para el 18?')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">🇨🇱 ¿Cuánto falta para el 18?</button>
+            <button onclick="enviarSugerenciaChat('Me quiero ir a la playa')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">🏖️ Playa o U</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+      <input type="text" id="chat-input" placeholder="Pregunta lo que sea..." onkeypress="manejarEnterChat(event)"
+        class="flex-grow bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-400">
+      <button onclick="procesarMensajeUsuario()" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-3.5 py-2 rounded-xl transition text-xs">
+        Enviar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleChatbot() {
+    const ventana = document.getElementById('chatbot-window');
+    if (!ventana) return;
+    ventana.classList.toggle('hidden');
+    if (!ventana.classList.contains('hidden')) {
+      const input = document.getElementById('chat-input');
+      if (input) input.focus();
+    }
+  }
+
+  function manejarEnterChat(e) {
+    if (e.key === 'Enter') procesarMensajeUsuario();
+  }
+
+  function enviarSugerenciaChat(texto) {
+    const input = document.getElementById('chat-input');
+    if (input) {
+      input.value = texto;
+      procesarMensajeUsuario();
+    }
+  }
+
+  function agregarMensajeAlChat(remitente, texto) {
+    const contenedor = document.getElementById('chat-messages');
+    if (!contenedor) return;
+    const esIA = remitente === 'IA';
+    const div = document.createElement('div');
+    div.className = `flex items-start space-x-2 ${esIA ? '' : 'flex-row-reverse space-x-reverse'}`;
+    div.innerHTML = `
+      <div class="${esIA ? 'bg-sky-500 text-slate-950' : 'bg-slate-700 text-white'} rounded-full w-6 h-6 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">
+        ${esIA ? 'IA' : 'Tú'}
+      </div>
+      <div class="${esIA ? 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200' : 'bg-sky-600 text-white'} p-3 rounded-2xl ${esIA ? 'rounded-tl-none' : 'rounded-tr-none'} shadow-sm max-w-[80%] text-xs space-y-1">
+        <p>${texto}</p>
+      </div>
+    `;
+    contenedor.appendChild(div);
+    contenedor.scrollTop = contenedor.scrollHeight;
+  }
+
+  function procesarMensajeUsuario() {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    const texto = input.value.trim();
+    if (!texto) return;
+
+    agregarMensajeAlChat('Tú', texto);
+    input.value = '';
+
+    setTimeout(() => {
+      const respuesta = generarRespuestaInteligente(texto);
+      agregarMensajeAlChat('IA', respuesta);
+    }, 500);
+  }
+
+  function generarRespuestaInteligente(pregunta) {
+    const p = pregunta.toLowerCase();
+
+    if (p.includes('grano') || p.includes('espinilla') || p.includes('culo') || p.includes('testiculo') || p.includes('huevo') || p.includes('afeito') || p.includes('cuchillo')) {
+      if (p.includes('cuchillo') || p.includes('afeito')) {
+        return `Oye pero ¿cómo se te ocurre pensar en usar un cuchillo? 🔪 Te vas a desangrar antes de ver la nota del certamen. Si de verdad tienes necesidad de hacerte mantenimiento, usa una maquinilla normal y con cuidado, por el amor de Dios. ¿Qué te pasa por la cabeza a estas horas? 😅`;
+      }
+      return `Pucha, los maleficios de la vida universitaria: estar sentado tantas horas en la silla de palo te destruye el cuerpo. Si te salió un grano ahí, vas a tener que estudiar parado un rato o sentarte de lado. ¿Te duele mucho o es solo la picantería de la incomodidad? 🧻😂`;
+    }
+
+    if (p.includes('playa') || p.includes('escapar') || p.includes('mandar todo a la mierda') || p.includes('dejar la u') || p.includes('pa luego es tarde')) {
+      return `Uf, la clásica crisis de mitad de semestre donde la opción de irse a vender collares a la playa suena como un plan de vida brillante. ¿Y qué te detiene? ¿El qué dirán de tus viejos o que realmente te da lata perder el año? Porque si te vas, avisa para ir a hacerte el aguante en la arena 🏖️🍹.`;
+    }
+
+    if (p.includes('matrix') || p.includes('aliens') || p.includes('zombies') || p.includes('simulacion') || p.includes('dios')) {
+      return `Pienso exactamente lo mismo. Si vivimos en una simulación, el programador nos tiene con el modo "dificultad extrema" activado solo por diversión. ¿Te imaginas que los aliens bajen justo a rescatarnos de la u? Sería el mejor plot twist de la historia 👽🛸.`;
+    }
+
+    if (p.includes('que dia es') || p.includes('fecha de hoy')) {
+      const hoy = new Date();
+      const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return `Hoy es ${hoy.toLocaleDateString('es-CL', opciones)}. Un día más en la matrix. ¿Sientes que la semana se pasó volando o ha sido eterna? 📅`;
+    }
+
+    if (p.includes('18') || p.includes('dieciocho') || p.includes('fiestas patrias')) {
+      const hoy = new Date();
+      let anioActual = hoy.getFullYear();
+      let f18 = new Date(anioActual, 8, 18);
+      if (hoy > new Date(anioActual, 8, 19)) f18 = new Date(anioActual + 1, 8, 18);
+      const dias = Math.ceil((f18 - hoy) / (1000 * 60 * 60 * 24));
+      return `Quedan ${dias} días para el 18. Imagínate la cantidad de anticuchos y terremotos que vamos a debernos después de pasar de largo estudiando. ¿Tienes algún plan armado o vas a pasar durmiendo? 🇨🇱🥟`;
+    }
+
+    if (p.includes('llueve') || p.includes('clima') || p.includes('tiempo')) {
+      return `Hermano, no tengo la app del clima abierta, pero si afuera está gris y hélido, es el día perfecto para quedarse en la cama viendo series en vez de ir a clases presenciales a sufrir. ¿Está lloviendo feo por donde estás? 🌧️️`;
+    }
+
+    if (p.includes('hola') || p.includes('buenos dias') || p.includes('buenas') || p.includes('que tal')) {
+      return `¡Hola! Dímelo todo, ¿qué te trae por aquí? ¿Vienes con ganas de conversar tonteras o de verdad necesitas resolver algo de la u? ✌️`;
+    }
+
+    const ppaGuardado = localStorage.getItem('ppa_actual') || 'No calculado';
+    if (p.includes('avance') || p.includes('notas') || p.includes('ppa')) {
+      return `Tu PPA actual va en ${ppaGuardado}. Podría ser peor, o sea, podrías estar repitiendo todo en verano. ¿Estás conforme con esa nota o te da lo mismo? 📊`;
+    } 
+    
+    if (p.includes('nota') || p.includes('necesito') || p.includes('certamen') || p.includes('aprobar')) {
+      return `Ah, el clásico cálculo de desesperación para ver si pasas con un 55 raspando. Métete a la pestaña de "¿Cuánto Necesito?" arriba y saca la cuenta tú mismo, que las matemáticas de la desesperación no fallan 🎯.`;
+    } 
+
+    const respuestasConversacionales = [
+      `No te creo. ¿De verdad me estás diciendo eso? Cuéntame más detalles porque suena a que hay una historia muy buena detrás de esa pregunta 🤔.`,
+      `Jajaja te pasaste. O sea, viéndolo desde tu punto de vista tiene algo de lógica, aunque igual es medio absurdo. ¿Y qué más se te ocurre sobre eso? 👀`,
+      `Qué temazo pusiste sobre la mesa. Yo la verdad opino que la vida es muy corta para amargarse con esas cosas, pero bueno, cada quien con sus traumas. ¿Hace cuánto que le das vuelta a esa idea? 💭`,
+      `Me dejas pensando... ¿Estás aburrido, estresado o de verdad crees lo que me estás diciendo? Sigue explayándote, te leo atentamente 🍿.`,
+      `Increíble pero cierto. A estas alturas del partido ya nada me sorprende de lo que me dicen por aquí. ¿Y cómo planeas terminar esa idea o es solo para desahogarte? 😆`
+    ];
+
+    return respuestasConversacionales[Math.floor(Math.random() * respuestasConversacionales.length)];
+  }
+</script>
 </body>
 </html>
