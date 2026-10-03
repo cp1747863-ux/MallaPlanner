@@ -42,7 +42,9 @@
       color: #0f172a;
     }
 
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
 
     /* --- ESTILOS DE IMPRESIÓN (PDF LIMPIO) --- */
     @media print {
@@ -58,6 +60,7 @@
       #login-screen, 
       #panel-avance, 
       #feedback-modal,
+      #chatbot-wrapper,
       footer {
         display: none !important;
       }
@@ -85,7 +88,7 @@
 <body class="flex flex-col min-h-screen transition-colors duration-200">
 
   <!-- PANTALLA DE LOGIN (MODAL SUPERPUESTO) -->
-  <div id="login-screen" class="fixed inset-0 bg-slate-950/90 dark:bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
+  <div id="login-screen" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
     <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full shadow-2xl space-y-6">
       <div class="text-center space-y-2">
         <div class="inline-block bg-sky-500 text-slate-950 font-black px-3 py-1 rounded text-lg tracking-wider">MallaPlanner</div>
@@ -580,6 +583,54 @@
 
     </main>
 
+    <!-- BURBUJA Y VENTANA DEL CHATBOT TUTOR (IA) -->
+    <div id="chatbot-wrapper" class="fixed bottom-5 right-5 z-50 no-print font-sans">
+      <!-- Botón Flotante -->
+      <button onclick="toggleChatbot()" id="chatbot-toggle-btn" class="bg-sky-500 hover:bg-sky-600 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105" aria-label="Abrir Asistente IA">
+        <span class="text-xl">🤖</span>
+      </button>
+
+      <!-- Ventana del Chat (Oculta por defecto) -->
+      <div id="chatbot-window" class="hidden absolute bottom-16 right-0 w-80 sm:w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all h-[450px]">
+        
+        <!-- Cabecera del Chat -->
+        <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center border-b border-slate-700">
+          <div class="flex items-center space-x-2">
+            <span class="text-sky-400 text-lg">✨</span>
+            <div>
+              <h3 class="text-xs font-bold">Tutor IA - MallaPlanner</h3>
+              <span class="text-[10px] text-emerald-400 flex items-center gap-1">● Conectado a tus datos</span>
+            </div>
+          </div>
+          <button onclick="toggleChatbot()" class="text-slate-400 hover:text-white text-sm font-bold" aria-label="Cerrar chat">&times;</button>
+        </div>
+
+        <!-- Historial de Conversación -->
+        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 text-xs bg-slate-50 dark:bg-slate-900/50">
+          <div class="flex items-start space-x-2">
+            <div class="bg-sky-500 text-slate-950 rounded-full w-6 h-6 flex items-center justify-center font-bold flex-shrink-0">IA</div>
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 dark:text-slate-200 space-y-1">
+              <p>¡Hola! Soy tu asistente académico. Puedo analizar tu malla, tu PPA o ayudarte con estrategias de estudio. ¿Qué te gustaría consultar hoy?</p>
+              <div class="flex flex-wrap gap-1 pt-1">
+                <button onclick="enviarSugerenciaChat('¿Cómo va mi avance?')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">📊 ¿Cómo va mi avance?</button>
+                <button onclick="enviarSugerenciaChat('¿Qué nota necesito en mi certamen?')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">🎯 ¿Qué nota necesito?</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Entrada de Texto -->
+        <div class="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+          <input type="text" id="chat-input" placeholder="Pregúntale al tutor..." onkeypress="manejarEnterChat(event)"
+            class="flex-grow bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-400">
+          <button onclick="procesarMensajeUsuario()" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-3.5 py-2 rounded-xl transition text-xs">
+            Enviar
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- MODAL FEEDBACK Y REPORTE DE PROBLEMAS -->
     <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
       <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
@@ -631,11 +682,11 @@
 
   </div>
 
-  <!-- Scripts -->
+  <!-- Scripts principales -->
   <script src="js/mallas.js"></script>
   <script src="js/app.js"></script>
 
-  <!-- Función JavaScript para alternar el Tema correctamente -->
+  <!-- Funciones JavaScript Globales (Tema, Service Worker y Chatbot Tutor) -->
   <script>
     function alternarTema() {
       const htmlEl = document.documentElement;
@@ -655,7 +706,7 @@
       }
     }
 
-    // Restaurar preferencia guardada
+    // Restaurar preferencia de tema guardada
     (function cargarTemaGuardado() {
       const temaGuardado = localStorage.getItem('tema');
       const htmlEl = document.documentElement;
@@ -664,7 +715,7 @@
 
       if (temaGuardado === 'claro') {
         htmlEl.classList.remove('dark');
-        if (themeIcon) themeIcon.textContent = '☀️';
+        if (themeIcon) themeIcon.textContent = '☀️️';
         if (themeText) themeText.textContent = 'Modo Oscuro';
       } else {
         htmlEl.classList.add('dark');
@@ -673,12 +724,87 @@
       }
     })();
 
+    // Registro del Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
           .then((reg) => console.log('Service Worker registrado con éxito:', reg.scope))
           .catch((err) => console.error('Error al registrar Service Worker:', err));
       });
+    }
+
+    // --- LÓGICA DEL CHATBOT TUTOR IA ---
+    function toggleChatbot() {
+      const ventana = document.getElementById('chatbot-window');
+      ventana.classList.toggle('hidden');
+      if (!ventana.classList.contains('hidden')) {
+        document.getElementById('chat-input').focus();
+      }
+    }
+
+    function manejarEnterChat(e) {
+      if (e.key === 'Enter') {
+        procesarMensajeUsuario();
+      }
+    }
+
+    function enviarSugerenciaChat(texto) {
+      document.getElementById('chat-input').value = texto;
+      procesarMensajeUsuario();
+    }
+
+    function agregarMensajeAlChat(remitente, texto) {
+      const contenedor = document.getElementById('chat-messages');
+      const esIA = remitente === 'IA';
+      
+      const div = document.createElement('div');
+      div.className = `flex items-start space-x-2 ${esIA ? '' : 'flex-row-reverse space-x-reverse'}`;
+      
+      div.innerHTML = `
+        <div class="${esIA ? 'bg-sky-500 text-slate-950' : 'bg-slate-700 text-white'} rounded-full w-6 h-6 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">
+          ${esIA ? 'IA' : 'Tú'}
+        </div>
+        <div class="${esIA ? 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200' : 'bg-sky-600 text-white'} p-3 rounded-2xl ${esIA ? 'rounded-tl-none' : 'rounded-tr-none'} shadow-sm max-w-[80%] text-xs space-y-1">
+          <p>${texto}</p>
+        </div>
+      `;
+      
+      contenedor.appendChild(div);
+      contenedor.scrollTop = contenedor.scrollHeight;
+    }
+
+    function procesarMensajeUsuario() {
+      const input = document.getElementById('chat-input');
+      const texto = input.value.trim();
+      if (!texto) return;
+
+      agregarMensajeAlChat('Tú', texto);
+      input.value = '';
+
+      setTimeout(() => {
+        const respuesta = generarRespuestaInteligente(texto);
+        agregarMensajeAlChat('IA', respuesta);
+      }, 600);
+    }
+
+    function generarRespuestaInteligente(pregunta) {
+      const p = pregunta.toLowerCase();
+      const ppaGuardado = localStorage.getItem('ppa_actual') || 'No calculado aún';
+      const carreraActual = localStorage.getItem('carrera_seleccionada') || 'Tu carrera';
+
+      if (p.includes('avance') || p.includes('notas') || p.includes('como va')) {
+        return `Analizando tus registros para <strong>${carreraActual}</strong>: Tu último PPA estimado o guardado es de <strong>${ppaGuardado}</strong>. Recuerda revisar la pestaña de Malla Curricular para actualizar tus ramos aprobados y ver tu porcentaje total de avance.`;
+      } 
+      
+      if (p.includes('nota') || p.includes('necesito') || p.includes('certamen') || p.includes('aprobar')) {
+        return `Para saber la nota exacta que necesitas en tus evaluaciones, te recomiendo usar la pestaña superior <strong>"¿Cuánto Necesito Aprobación?"</strong>. Ingresa las ponderaciones de tus certámenes y el sistema te calculará el puntaje exacto para lograr la nota mínima de aprobación (55 pts).`;
+      } 
+      
+      if (p.includes('estrés') || p.includes('cansado') || p.includes('burnout') || p.includes('descanso')) {
+        return `⚠️ Noto fatiga en tu consulta. Como tu tutor, te sugiero aplicar la técnica Pomodoro (25 minutos de estudio concentrado por 5 de descanso) y revisar tu <a href="#" onclick="cambiarPestana('agenda')" class="text-sky-500 underline">Agenda</a> para no sobrecargar tus días. ¡No olvides dormir bien!`;
+      }
+
+      return `Entiendo tu consulta sobre "${pregunta}". Como asistente enfocado en tu gestión estudiantil, te sugiero mantener al día tus registros en el <strong>Horario Semanal</strong> y revisar tus plazos en la <strong>Agenda</strong>. ¿Hay algo específico sobre tus ramos o cálculos que desees resolver?`;
     }
   </script>
 </body>
