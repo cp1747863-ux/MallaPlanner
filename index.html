@@ -156,25 +156,25 @@
       <!-- BOTONES DE ACCIÓN, MODO OSCURO Y RESPALDO -->
       <div class="flex items-center space-x-2 sm:space-x-3">
         <!-- Botón de Feedback -->
-        <button onclick="document.getElementById('feedback-modal').classList.remove('hidden')" title="Enviar Feedback o Reporte"
+        <button onclick="document.getElementById('feedback-modal').classList.remove('hidden')" title="Enviar Feedback o Reporte" aria-label="Enviar Feedback o Reporte"
           class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-amber-400 font-medium transition flex items-center gap-1.5 no-print">
-          <span>💬</span> <span class="hidden sm:inline">Feedback</span>
+          <span aria-hidden="true">💬</span> <span class="hidden sm:inline">Feedback</span>
         </button>
 
         <!-- Botón de Modo Claro / Oscuro -->
-        <button onclick="alternarTema()" id="btn-theme" title="Cambiar tema"
+        <button onclick="alternarTema()" id="btn-theme" title="Cambiar tema" aria-label="Cambiar tema"
           class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-slate-200 font-medium transition flex items-center gap-1.5 no-print">
-          <span id="theme-icon">🌙</span> <span id="theme-text" class="hidden sm:inline">Modo Claro</span>
+          <span id="theme-icon" aria-hidden="true">🌙</span> <span id="theme-text" class="hidden sm:inline">Modo Claro</span>
         </button>
 
-        <button onclick="exportarRespaldoJSON()" title="Exportar copia de seguridad"
+        <button onclick="exportarRespaldoJSON()" title="Exportar copia de seguridad" aria-label="Exportar copia de seguridad"
           class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-sky-400 font-medium transition flex items-center gap-1 no-print">
-          <span>📥</span> <span class="hidden sm:inline">Exportar</span>
+          <span aria-hidden="true">📥</span> <span class="hidden sm:inline">Exportar</span>
         </button>
         
-        <button onclick="document.getElementById('file-import-json').click()" title="Importar copia de seguridad"
+        <button onclick="document.getElementById('file-import-json').click()" title="Importar copia de seguridad" aria-label="Importar copia de seguridad"
           class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded text-emerald-400 font-medium transition flex items-center gap-1 no-print">
-          <span>📤</span> <span class="hidden sm:inline">Importar</span>
+          <span aria-hidden="true">📤</span> <span class="hidden sm:inline">Importar</span>
         </button>
         <input type="file" id="file-import-json" accept=".json" onchange="importarRespaldoJSON(event)" class="hidden">
 
@@ -186,7 +186,7 @@
     </header>
 
     <!-- BARRA DE NAVEGACIÓN DE PESTAÑAS -->
-    <div class="bg-slate-900/40 border-b border-slate-800 px-6 no-print">
+    <nav aria-label="Navegación principal" class="bg-slate-900/40 border-b border-slate-800 px-6 no-print">
       <div class="max-w-5xl mx-auto flex space-x-6 text-sm overflow-x-auto">
         <button onclick="cambiarPestana('malla')" id="tab-malla" class="py-3 font-semibold border-b-2 border-sky-400 text-sky-400 transition whitespace-nowrap">
           Malla Curricular
@@ -207,7 +207,7 @@
           Horario Semanal
         </button>
       </div>
-    </div>
+    </nav>
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="max-w-5xl mx-auto w-full p-4 md:p-6 flex-grow">
@@ -618,7 +618,7 @@
     <!-- MODAL FEEDBACK Y REPORTE DE PROBLEMAS -->
     <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
       <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
-        <button onclick="document.getElementById('feedback-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">
+        <button onclick="document.getElementById('feedback-modal').classList.add('hidden')" aria-label="Cerrar modal" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">
           &times;
         </button>
         
@@ -632,7 +632,7 @@
         </div>
 
         <div class="flex flex-col gap-3 pt-2">
-          <!-- Botón GitHub Issues con URL exacta -->
+          <!-- Botón GitHub Issues -->
           <a 
             href="https://github.com/cp1747863-ux/MallaPlanner/issues" 
             target="_blank" 
@@ -642,7 +642,7 @@
             🐛 Reportar Error o Sugerencia (GitHub Issues)
           </a>
 
-          <!-- Botón Formulario Directo con URL exacta -->
+          <!-- Botón Formulario Directo -->
           <a 
             href="https://forms.gle/BkfyXRkBTVPdCZDx7" 
             target="_blank" 
