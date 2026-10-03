@@ -644,7 +644,7 @@
           <div class="flex items-start space-x-2">
             <div class="bg-sky-500 text-slate-950 rounded-full w-6 h-6 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">IA</div>
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 dark:text-slate-200 space-y-1">
-              <p>¡Hola! Soy tu tutor universitario sin filtros. ¿Qué conversamos hoy? ✌️️</p>
+              <p>¡Hola! Soy tu tutor universitario sin filtros. ¿Qué conversamos hoy? ✌</p>
               <div class="flex flex-wrap gap-1 pt-1">
                 <button onclick="enviarSugerenciaChat('¿Cómo va mi avance?')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">📊 ¿Cómo va mi avance?</button>
                 <button onclick="enviarSugerenciaChat('Me quiero ir a la playa')" class="bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 px-2 py-0.5 rounded text-[10px] hover:bg-sky-100">🏖️ Playa o U</button>
@@ -863,7 +863,8 @@
       const systemPrompt = `Eres un tutor universitario cercano, empático y directo. El PPA del alumno es ${ppa}. Responde de forma breve y útil.`;
 
       const keyLimpia = apiKey.trim();
-      const modelos = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+      // Modelos actualizados para evitar errores de modelos discontinuados
+      const modelos = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
       let ultimoError = null;
 
       for (const modelo of modelos) {
