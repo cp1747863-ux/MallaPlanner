@@ -863,14 +863,11 @@ async function llamarGemini(prompt, apiKey) {
   const systemPrompt = `Eres un tutor universitario cercano, empático y directo. El PPA del alumno es ${ppa}. Responde de forma breve y útil.`;
 
   const keyLimpia = apiKey.trim();
-  
-  // Modelos compatibles con la API pública de Google Gemini
   const modelos = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.0-pro'];
   let ultimoError = null;
 
   for (const modelo of modelos) {
     try {
-      // Cambio a la versión estable /v1/ de la API de Google
       const url = `https://generativelanguage.googleapis.com/v1/models/${modelo}:generateContent?key=${keyLimpia}`;
 
       const response = await fetch(url, {
