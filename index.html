@@ -46,6 +46,18 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
+    /* Estilo del cursor para indicar drag */
+    #chatbot-wrapper {
+      touch-action: none;
+      user-select: none;
+    }
+    #chatbot-toggle-btn {
+      cursor: grab;
+    }
+    #chatbot-toggle-btn:active {
+      cursor: grabbing;
+    }
+
     /* --- ESTILOS DE IMPRESIÓN (PDF LIMPIO) --- */
     @media print {
       body {
@@ -621,15 +633,15 @@
     <div id="chatbot-wrapper" class="fixed bottom-5 right-5 z-50 no-print font-sans">
       <!-- Botón Flotante -->
       <button onclick="toggleChatbot()" id="chatbot-toggle-btn" class="bg-sky-500 hover:bg-sky-600 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105" aria-label="Abrir Asistente IA">
-        <span class="text-xl">🤖</span>
+        <span class="text-xl pointer-events-none">🤖</span>
       </button>
 
       <!-- Ventana del Chat (Oculta por defecto) -->
       <div id="chatbot-window" class="hidden absolute bottom-16 right-0 w-80 sm:w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all h-[460px]">
         
         <!-- Cabecera del Chat -->
-        <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center border-b border-slate-700">
-          <div class="flex items-center space-x-2">
+        <div id="chatbot-header" class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center border-b border-slate-700 cursor-move">
+          <div class="flex items-center space-x-2 pointer-events-none">
             <span class="text-sky-400 text-lg">✨</span>
             <div>
               <h3 class="text-xs font-bold">Tutor IA - MallaPlanner</h3>
@@ -722,6 +734,97 @@
 
   <!-- Funciones JavaScript Globales para Chatbot IA Real -->
   <script>
+    // --- LÓGICA DE ARRASTRE (DRAG & DROP) DEL BOTÓN DE LA IA ---
+    function hacerElementoArrastrable(idContenedor, idGrip) {
+      const el = document.getElementById(idContenedor);
+      const grip = document.getElementById(idGrip) || el;
+      if (!el) return;
+
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      let huboMovimiento = false;
+
+      grip.onmousedown = iniciarArrastreMouse;
+      grip.ontouchstart = iniciarArrastreTouch;
+
+      function iniciarArrastreMouse(e) {
+        if (e.target.tagName === 'BUTTON' && e.target !== grip) return;
+        e.preventDefault();
+        huboMovimiento = false;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = detenerArrastreMouse;
+        document.onmousemove = elementoMoverMouse;
+      }
+
+      function elementoMoverMouse(e) {
+        e.preventDefault();
+        huboMovimiento = true;
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        
+        let newTop = el.offsetTop - pos2;
+        let newLeft = el.offsetLeft - pos1;
+
+        // Limitar dentro de los bordes de la pantalla
+        const maxLeft = window.innerWidth - el.offsetWidth;
+        const maxTop = window.innerHeight - el.offsetHeight;
+
+        el.style.top = Math.max(0, Math.min(newTop, maxTop)) + "px";
+        el.style.left = Math.max(0, Math.min(newLeft, maxLeft)) + "px";
+        el.style.bottom = "auto";
+        el.style.right = "auto";
+      }
+
+      function detenerArrastreMouse() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+
+      function iniciarArrastreTouch(e) {
+        huboMovimiento = false;
+        const touch = e.touches[0];
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        document.ontouchend = detenerArrastreTouch;
+        document.ontouchmove = elementoMoverTouch;
+      }
+
+      function elementoMoverTouch(e) {
+        huboMovimiento = true;
+        const touch = e.touches[0];
+        pos1 = pos3 - touch.clientX;
+        pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+
+        let newTop = el.offsetTop - pos2;
+        let newLeft = el.offsetLeft - pos1;
+
+        const maxLeft = window.innerWidth - el.offsetWidth;
+        const maxTop = window.innerHeight - el.offsetHeight;
+
+        el.style.top = Math.max(0, Math.min(newTop, maxTop)) + "px";
+        el.style.left = Math.max(0, Math.min(newLeft, maxLeft)) + "px";
+        el.style.bottom = "auto";
+        el.style.right = "auto";
+      }
+
+      function detenerArrastreTouch() {
+        document.ontouchend = null;
+        document.ontouchmove = null;
+      }
+
+      // Prevenir apertura/cierre involuntario al arrastrar
+      grip.addEventListener('click', (e) => {
+        if (huboMovimiento) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+    }
+
     // --- GUARDAR Y CARGAR CONFIGURACIÓN DE API KEY ---
     function guardarApiKey() {
       const provider = document.getElementById('ai-provider').value;
@@ -858,63 +961,65 @@
       return data.choices[0].message.content;
     }
 
-async function llamarGemini(prompt, apiKey) {
-  const ppa = document.getElementById('res-ppa-valor')?.textContent || 'No calculado';
-  const systemPrompt = `Eres un tutor universitario cercano, empático y directo. El PPA del alumno es ${ppa}. Responde de forma breve y útil.`;
+    async function llamarGemini(prompt, apiKey) {
+      const ppa = document.getElementById('res-ppa-valor')?.textContent || 'No calculado';
+      const systemPrompt = `Eres un tutor universitario cercano, empático y directo. El PPA del alumno es ${ppa}. Responde de forma breve y útil.`;
 
-  const keyLimpia = apiKey.trim();
-  
-  // Modelos de la serie 3.x recomendados por la API de Google Gemini
-  const modelos = [
-    'gemini-3.8-flash',
-    'gemini-3.5-flash',
-    'gemini-3.5-flash-lite',
-    'gemini-3.1-flash',
-    'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-3.8-flash-preview',
-    'gemini-3.5-flash-preview',
-    'gemini-3.1-flash-lite-preview'
-  ];
-  let ultimoError = null;
+      const keyLimpia = apiKey.trim();
+      
+      const modelos = [
+        'gemini-3.8-flash',
+        'gemini-3.5-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash',
+        'gemini-3.1-flash-lite',
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3.8-flash-preview',
+        'gemini-3.5-flash-preview',
+        'gemini-3.1-flash-lite-preview'
+      ];
+      let ultimoError = null;
 
-  for (const modelo of modelos) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${keyLimpia}`;
+      for (const modelo of modelos) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${keyLimpia}`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }]
-            }
-          ]
-        })
-      });
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: {
+                parts: [{ text: systemPrompt }]
+              },
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: prompt }]
+                }
+              ]
+            })
+          });
 
-      const data = await response.json();
+          const data = await response.json();
 
-      if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-        return data.candidates[0].content.parts[0].text;
-      } else if (data.error) {
-        ultimoError = `${data.error.message} (Código: ${data.error.code || 'Desconocido'})`;
+          if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            return data.candidates[0].content.parts[0].text;
+          } else if (data.error) {
+            ultimoError = `${data.error.message} (Código: ${data.error.code || 'Desconocido'})`;
+          }
+        } catch (err) {
+          ultimoError = err.message;
+        }
       }
-    } catch (err) {
-      ultimoError = err.message;
+
+      throw new Error(ultimoError || 'No se pudo obtener respuesta de Google Gemini.');
     }
-  }
 
-  throw new Error(ultimoError || 'No se pudo obtener respuesta de Google Gemini.');
-}
-
-    document.addEventListener('DOMContentLoaded', cargarApiKeyGuardada);
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarApiKeyGuardada();
+      hacerElementoArrastrable('chatbot-wrapper', 'chatbot-toggle-btn');
+    });
   </script>
 </body>
 </html>
