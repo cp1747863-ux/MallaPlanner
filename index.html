@@ -859,13 +859,13 @@
     }
 
 async function llamarGemini(prompt, apiKey) {
-  const ppa = document.getElementById('res-ppa-valor')?.textContent || 'No calculated';
+  const ppa = document.getElementById('res-ppa-valor')?.textContent || 'No calculado';
   const systemPrompt = `Eres un tutor universitario cercano, empático y directo. El PPA del alumno es ${ppa}. Responde de forma breve y útil.`;
 
   const keyLimpia = apiKey.trim();
   
-  // Modelos activos verificados directamente en tu cuenta
-  const modelos = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+  // Modelos de la serie 3.x recomendados por la API de Google Gemini
+  const modelos = ['gemini-3.8-flash', 'gemini-3.5-flash'];
   let ultimoError = null;
 
   for (const modelo of modelos) {
