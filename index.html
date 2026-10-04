@@ -863,21 +863,26 @@ async function llamarGemini(prompt, apiKey) {
   const systemPrompt = `Eres un tutor universitario cercano, empático y directo. El PPA del alumno es ${ppa}. Responde de forma breve y útil.`;
 
   const keyLimpia = apiKey.trim();
-  const modelos = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.0-pro'];
+  
+  // Modelos con identificadores estándar soportados en la API de Google Gemini
+  const modelos = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
   let ultimoError = null;
 
   for (const modelo of modelos) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1/models/${modelo}:generateContent?key=${keyLimpia}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${keyLimpia}`;
 
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
           contents: [
             {
               role: 'user',
-              parts: [{ text: `${systemPrompt}\n\nEstudiante: ${prompt}` }]
+              parts: [{ text: prompt }]
             }
           ]
         })
