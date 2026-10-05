@@ -1,5 +1,3 @@
-// js/mallas.js
-
 const datosUSM = {
   sedes: [
     { id: "cc", nombre: "Campus Casa Central (Valparaíso)" },
