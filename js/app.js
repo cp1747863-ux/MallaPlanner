@@ -346,7 +346,7 @@ function cargarDatosLocales() {
   }
 }
 
-// --- INICIALIZACIÓN ---
+// --- INICIALIZACIÓN Y SERVICE WORKER ---
 document.addEventListener('DOMContentLoaded', () => {
   const savedUser = localStorage.getItem('mallaplanner_user');
   const savedTheme = localStorage.getItem('mallaplanner_theme');
@@ -359,5 +359,12 @@ document.addEventListener('DOMContentLoaded', () => {
     estadoUsuario.email = savedUser;
     cargarDatosLocales();
     mostrarInterfazPrincipal();
+  }
+
+  // Registro de PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registrado:', reg.scope))
+      .catch(err => console.warn('Error registrando Service Worker:', err));
   }
 });
